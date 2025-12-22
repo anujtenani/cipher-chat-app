@@ -1,31 +1,40 @@
-import { apiGet } from "@/utils/api";
+import Avatar from "@/components/ui/Avatar";
+import HeaderIconButton from "@/components/ui/HeaderIconButton";
+import { ThemedText } from "@/components/ui/ThemedText";
+import TypingIndicator from "@/components/ui/TypingIndicator";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useTyping } from "@/hooks/useTyping";
+import { apiGet, socket } from "@/utils/api";
 import { Conversation } from "@/utils/api_types";
 import { formatTimestamp } from "@/utils/func";
-import { useRouter } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Stack, useRouter } from "expo-router";
+import React, { useEffect } from "react";
+import { Button, FlatList, Text, TouchableOpacity, View } from "react-native";
 import useSWR from "swr";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { data, isLoading } = useSWR<{ conversations: Conversation[] }>(
+  const { data, mutate, isLoading } = useSWR<{ conversations: Conversation[] }>(
     "/conversations",
     apiGet
   );
+  useEffect(() => {
+    socket.on("message:new", (data: any) => {
+      // Handle incoming message
+      mutate();
+      // console.log("New message received:", data);
+    });
+  }, [mutate]);
   const conversations = data?.conversations || [];
-
+  const borderColor = useThemeColor({}, "border");
+  const textColor = useThemeColor({}, "text");
   const renderItem = ({ item }: { item: Conversation }) => {
     const otherParticipant = item.participants[0];
-    const lastMessage =
-      item.last_message?.data?.text ||
-      item.last_message?.data?.text ||
-      "No messages yet";
+    const last_message = item.last_message;
+    const lastMessage = last_message?.data.attachments
+      ? "Attachment"
+      : last_message?.data.text || "No messages yet";
 
     return (
       <TouchableOpacity
@@ -33,24 +42,17 @@ export default function HomeScreen() {
         style={{
           flexDirection: "row",
           padding: 16,
-          backgroundColor: "#fff",
+          gap: 12,
           borderBottomWidth: 1,
-          borderBottomColor: "#e5e7eb",
+          borderBottomColor: borderColor,
           alignItems: "center",
         }}
       >
-        <Image
-          source={{
-            uri:
-              otherParticipant.profile_photo?.url ||
-              "https://via.placeholder.com/50",
-          }}
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            marginRight: 12,
-          }}
+        <Avatar
+          uri={otherParticipant?.profile_photo?.url}
+          name={otherParticipant?.username}
+          size={56}
+          lastSeenAt={new Date().toISOString()}
         />
 
         <View style={{ flex: 1 }}>
@@ -62,10 +64,10 @@ export default function HomeScreen() {
               marginBottom: 4,
             }}
           >
-            <Text style={{ fontSize: 16, fontWeight: "600", color: "#111" }}>
+            <Text style={{ fontSize: 16, fontWeight: "600", color: textColor }}>
               {otherParticipant.username}
             </Text>
-            <Text style={{ fontSize: 12, color: "#6b7280" }}>
+            <Text style={{ fontSize: 12, color: textColor, opacity: 0.6 }}>
               {formatTimestamp(item.last_message_at)}
             </Text>
           </View>
@@ -81,7 +83,8 @@ export default function HomeScreen() {
               numberOfLines={1}
               style={{
                 fontSize: 14,
-                color: item.unread_count > 0 ? "#111" : "#6b7280",
+                color: textColor,
+                opacity: item.unread_count > 0 ? 1 : 0.7,
                 fontWeight: item.unread_count > 0 ? "500" : "400",
                 flex: 1,
                 marginRight: 8,
@@ -89,6 +92,10 @@ export default function HomeScreen() {
             >
               {lastMessage}
             </Text>
+            <IsTypingInConversation
+              conversationId={item.id}
+            ></IsTypingInConversation>
+
             {item.unread_count > 0 && (
               <View
                 style={{
@@ -114,44 +121,105 @@ export default function HomeScreen() {
     );
   };
 
-  if (isLoading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#fff",
+  return (
+    <React.Fragment>
+      <Stack.Screen
+        options={{
+          title: "Chats",
+          headerRight: () => (
+            <HeaderIconButton
+              icon={"add-outline"}
+              onPress={() => router.push("/nearby")}
+            />
+          ),
         }}
-      >
-        <ActivityIndicator size="large" color="#3b82f6" />
-      </View>
-    );
-  }
+      />
+      <FlatList
+        refreshing={isLoading}
+        onRefresh={() => mutate()}
+        data={conversations}
+        ListEmptyComponent={isLoading ? null : ListEmptyComponent}
+        ListHeaderComponent={ShowPushNotificationPrompt}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        style={{ flex: 1 }}
+      />
+    </React.Fragment>
+  );
+}
 
-  if (conversations.length === 0) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#fff",
-        }}
-      >
-        <Text style={{ fontSize: 16, color: "#6b7280" }}>
-          No conversations yet
-        </Text>
-      </View>
-    );
+function IsTypingInConversation({
+  conversationId,
+}: {
+  conversationId: number;
+}) {
+  const typingUsers = useTyping((state) => state.typingUsers);
+  if (typingUsers.has(conversationId)) {
+    return <TypingIndicator />;
   }
+  return null;
+}
+
+function ListEmptyComponent() {
+  const router = useRouter();
+  const textColor = useThemeColor({}, "text");
 
   return (
-    <FlatList
-      data={conversations}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id.toString()}
-      style={{ flex: 1, backgroundColor: "#fff" }}
-    />
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingVertical: 48,
+      }}
+    >
+      <ThemedText
+        style={{
+          fontSize: 16,
+          opacity: 0.6,
+          textAlign: "center",
+        }}
+      >
+        No conversations yet
+      </ThemedText>
+      <ThemedText
+        style={{
+          fontSize: 14,
+          opacity: 0.4,
+          marginTop: 8,
+          textAlign: "center",
+        }}
+      >
+        Start a new chat to get started
+      </ThemedText>
+      <TouchableOpacity
+        onPress={() => router.push("/nearby")}
+        style={{
+          marginTop: 24,
+          backgroundColor: "#3b82f6",
+          paddingHorizontal: 24,
+          paddingVertical: 12,
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+          Discover People Nearby
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
+}
+
+function ShowPushNotificationPrompt() {
+  const { hasPermission, register } = usePushNotifications();
+
+  if (!hasPermission) {
+    return (
+      <View style={{ padding: 16, alignItems: "center" }}>
+        <ThemedText>Enable push notifications to stay updated!</ThemedText>
+        <Button title="Enable Notifications" onPress={register} />
+      </View>
+    );
+  }
+  return null;
 }

@@ -1,12 +1,11 @@
 import { useAuth } from "@/hooks/useAuth";
 import { apiPost, setAccessToken } from "@/utils/api";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import ThemedButton from "../ui/ThemedButton";
 import ThemedInput from "../ui/ThemedInput";
-import { ThemedText } from "../ui/ThemedText";
-
 export default function SignupForm() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -37,9 +36,18 @@ export default function SignupForm() {
   };
   return (
     <View style={{ padding: 16 }}>
-      <ThemedText type="title" style={{ marginBottom: 16 }}>
-        Sign Up
-      </ThemedText>
+      <View>
+        <Image
+          source={require("../../assets/images/icon.png")}
+          style={{
+            borderRadius: 28,
+            overflow: "hidden",
+            width: 128,
+            height: 128,
+            marginBottom: 24,
+          }}
+        />
+      </View>
       <ThemedInput
         value={username}
         autoCapitalize="none"
@@ -68,7 +76,7 @@ export default function SignupForm() {
       ></ThemedButton>
       <Pressable
         onPress={() => router.push("/login")}
-        style={{ marginTop: 16 }}
+        style={{ marginTop: 42 }}
       >
         <Text
           style={{

@@ -1,6 +1,9 @@
+import { useThemeColor } from "@/hooks/use-theme-color";
 import { TextInput } from "react-native";
 
 export default function ThemedInput(props: TextInput["props"]) {
+  const borderColor = useThemeColor({}, "border");
+  const color = useThemeColor({}, "text");
   return (
     <>
       <TextInput
@@ -12,7 +15,8 @@ export default function ThemedInput(props: TextInput["props"]) {
             fontSize: 18,
             paddingVertical: 12,
             paddingHorizontal: 12,
-            borderColor: "#ccc",
+            borderColor: borderColor,
+            color,
           },
           props.style,
         ]}

@@ -1,7 +1,7 @@
 import { Message } from "@/utils/api_types";
 import { formatTimestamp } from "@/utils/func";
-import { Image, Text, View } from "react-native";
-
+import { Image } from "expo-image";
+import { Text, View } from "react-native";
 export function MessageText({
   side,
   text,
@@ -105,7 +105,10 @@ export function MessageAttachmentMedia({
           {attachments.map((attachment, index) => (
             <Image
               key={index}
-              source={{ uri: attachment.thumbnail_url || attachment.url }}
+              source={{
+                uri: attachment.thumbnail || attachment.url,
+                blurhash: attachment.blurhash,
+              }}
               style={{
                 width: 240,
                 height: 240,

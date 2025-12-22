@@ -1,6 +1,7 @@
+import BottomModal from "@/components/BottomModal";
 import Avatar from "@/components/ui/Avatar";
-import BottomSheet from "@/components/ui/BottomSheet";
 import ThemedButton from "@/components/ui/ThemedButton";
+import ThemedInput from "@/components/ui/ThemedInput";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { apiGet, apiPost } from "@/utils/api";
@@ -15,11 +16,17 @@ import useSWR from "swr";
 export default function NearbyUsers() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
+  const [search, setSearch] = useState("");
 
   const { data, isLoading, mutate, isValidating } = useSWR<{
     users: PublicUser[];
     count: number;
-  }>("/users/nearby?limit=100&offset=0", apiGet);
+  }>(
+    `/users/nearby?limit=100&offset=0${
+      search ? `&search=${encodeURIComponent(search)}` : ""
+    }`,
+    apiGet
+  );
 
   const [visible, setVisible] = React.useState(false);
   const [selectedUser, setSelectedUser] = React.useState<PublicUser | null>(
@@ -44,36 +51,51 @@ export default function NearbyUsers() {
 
   return (
     <React.Fragment>
-      <BottomSheet visible={visible} onClose={toggleVisible}>
+      <BottomModal
+        visible={visible}
+        title={selectedUser?.username}
+        onClose={toggleVisible}
+      >
         <RenderBottomSheetContent
           user={selectedUser!}
           toggleClose={toggleVisible}
         />
-      </BottomSheet>
+      </BottomModal>
 
-      <FlatList
-        data={data?.users || []}
-        keyExtractor={(item) => item.id.toString()}
-        refreshing={isLoading || isValidating}
-        onRefresh={mutate}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 16 }}
-        ListEmptyComponent={
-          !isLoading ? (
-            <View
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                paddingVertical: 60,
-              }}
-            >
-              <Text style={{ fontSize: 16, color: colors.icon }}>
-                No nearby users found
-              </Text>
-            </View>
-          ) : null
-        }
-      />
+      <View style={{ flex: 1 }}>
+        <View style={{ padding: 16, paddingBottom: 8 }}>
+          <ThemedInput
+            placeholder="Search nearby users..."
+            value={search}
+            onChangeText={setSearch}
+            leftIcon="search-outline"
+          />
+        </View>
+        <FlatList
+          data={data?.users || []}
+          style={{ flex: 1 }}
+          keyExtractor={(item) => item.username.toString()}
+          refreshing={isLoading || isValidating}
+          onRefresh={mutate}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 16 }}
+          ListEmptyComponent={
+            !isLoading ? (
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingVertical: 60,
+                }}
+              >
+                <Text style={{ fontSize: 16, color: colors.icon }}>
+                  No nearby users found
+                </Text>
+              </View>
+            ) : null
+          }
+        />
+      </View>
     </React.Fragment>
   );
 }
@@ -191,16 +213,6 @@ function RenderBottomSheetContent({
         paddingBottom: 24,
       }}
     >
-      <Text
-        style={{
-          color: colors.text,
-          fontSize: 18,
-          fontWeight: "bold",
-          marginBottom: 8,
-        }}
-      >
-        {user.username}
-      </Text>
       <RenderUserItem user={user}></RenderUserItem>
       <View
         style={{

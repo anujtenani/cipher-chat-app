@@ -5,9 +5,17 @@ interface AvatarProps {
   uri?: string;
   name: string;
   size?: number;
+  status?: "online" | "away";
+  lastSeenAt?: string;
 }
 
-export default function Avatar({ uri, name, size = 50 }: AvatarProps) {
+export default function Avatar({
+  uri,
+  name,
+  size = 50,
+  status,
+  lastSeenAt,
+}: AvatarProps) {
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -16,6 +24,15 @@ export default function Avatar({ uri, name, size = 50 }: AvatarProps) {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const computeStatus = (): "online" | "away" | null => {
+    if (status) return status;
+    if (!lastSeenAt) return null;
+    const diff = Date.now() - new Date(lastSeenAt).getTime();
+    return diff < 5 * 60 * 1000 ? "online" : "away";
+  };
+
+  const currentStatus = computeStatus();
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -35,6 +52,23 @@ export default function Avatar({ uri, name, size = 50 }: AvatarProps) {
             {getInitials(name)}
           </Text>
         </View>
+      )}
+      {currentStatus && (
+        <View
+          accessible
+          accessibilityLabel={`Status: ${currentStatus}`}
+          style={{
+            position: "absolute",
+            right: 0,
+            bottom: 0,
+            width: size * 0.22,
+            height: size * 0.22,
+            borderRadius: (size * 0.22) / 2,
+            borderWidth: 2,
+            borderColor: "#fff",
+            backgroundColor: currentStatus === "online" ? "#10B981" : "#F59E0B",
+          }}
+        />
       )}
     </View>
   );

@@ -1,26 +1,41 @@
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { apiPost } from "@/utils/api";
+import { useTypingEvents } from "@/hooks/useTyping";
+import { apiPost, socket } from "@/utils/api";
+import { formatFileSize } from "@/utils/func";
+import { getThumbnailAsync } from "@/utils/thumbnail_utils";
+import { uploadFile, uploadImageFile } from "@/utils/upload_functions";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { create } from "zustand";
+import { ThemedView } from "../themed-view";
 import ThemedInput from "../ui/ThemedInput";
+import { ThemedText } from "../ui/ThemedText";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
-  onSendAttachment?: (uri: string, type: "image" | "video") => void;
   conversationId: number;
 }
 
 export default function ChatInput({
   onSendMessage,
   conversationId,
-  onSendAttachment,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const iconColor = useThemeColor({}, "icon");
   const insets = useSafeAreaInsets();
+  const handleTyping = useTypingEvents({
+    delay: 700,
+    onStart: () => {
+      socket.emit("typing:start", { conversationId });
+    },
+    onStop: () => {
+      socket.emit("typing:stop", { conversationId });
+    },
+  });
 
   const handleSend = () => {
     if (message.trim()) {
@@ -31,44 +46,194 @@ export default function ChatInput({
       setMessage("");
     }
   };
+  const borderColor = useThemeColor({}, "border");
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        padding: 8,
-        paddingBottom: insets.bottom + 4,
-        paddingLeft: insets.left + 8,
-        paddingRight: insets.right + 8,
-        backgroundColor: "white",
-        borderTopColor: "#dedede",
-        borderTopWidth: StyleSheet.hairlineWidth,
-      }}
-    >
-      <AttachmentButton />
-      <ThemedInput
-        style={{ flex: 1, borderRadius: 20 }}
-        placeholder="Type a message..."
-        value={message}
-        onChangeText={setMessage}
-        multiline
-        onSubmitEditing={handleSend}
-      />
+    <ThemedView>
+      <UploadingList conversationId={conversationId} />
 
-      <TouchableOpacity
-        onPress={handleSend}
-        style={{ marginLeft: 8, padding: 8 }}
-        disabled={!message.trim()}
+      <ThemedView
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          padding: 8,
+          paddingBottom: insets.bottom + 4,
+          paddingLeft: insets.left + 8,
+          paddingRight: insets.right + 8,
+          borderTopColor: borderColor,
+          borderTopWidth: StyleSheet.hairlineWidth,
+        }}
       >
-        <Ionicons name="send-outline" size={20} color={iconColor} />
-      </TouchableOpacity>
+        <AttachmentButton conversationId={conversationId} />
+        <ThemedInput
+          style={{ flex: 1, borderRadius: 20 }}
+          placeholder="Type a message..."
+          value={message}
+          onChangeText={(message) => {
+            setMessage(message);
+            handleTyping();
+          }}
+          multiline
+          onSubmitEditing={handleSend}
+        />
+
+        <TouchableOpacity
+          onPress={handleSend}
+          style={{ marginLeft: 8, padding: 8 }}
+          disabled={!message.trim()}
+        >
+          <Ionicons name="send-outline" size={20} color={iconColor} />
+        </TouchableOpacity>
+      </ThemedView>
+    </ThemedView>
+  );
+}
+
+type FileAttachment = ImagePicker.ImagePickerAsset & {
+  conversationId: number;
+  id: string;
+  metadata: {
+    thumbnail?: string;
+    width: number;
+    height: number;
+    duration?: number;
+    size?: number;
+    blurhash?: string;
+  };
+};
+
+interface AttachmentSenderState {
+  files: FileAttachment[];
+  fileQueue: FileAttachment[];
+  isProcessing: boolean;
+  progressTracker: { [fileId: string]: number };
+  addFile: (file: FileAttachment) => void;
+  removeSendingFile: (fileId: string) => void;
+  processQueue: () => Promise<void>;
+}
+
+const useAttachmentSender = create<AttachmentSenderState>((set, get) => {
+  return {
+    files: [] as FileAttachment[],
+    progressTracker: {},
+    isProcessing: false,
+    fileQueue: [] as FileAttachment[],
+    addFile: (file: FileAttachment) => {
+      set({
+        files: [...get().files, file],
+        fileQueue: [...get().fileQueue, file],
+      });
+      get().processQueue();
+    },
+    removeSendingFile: (fileId: string) => {
+      set({
+        files: get().files.filter((f) => f.id !== fileId),
+        fileQueue: get().fileQueue.filter((f) => f.id !== fileId),
+      });
+    },
+    processQueue: async () => {
+      const { fileQueue, isProcessing } = get();
+      if (isProcessing) return;
+      if (fileQueue.length > 0) {
+        const toProcess = fileQueue.pop();
+
+        set({ fileQueue: fileQueue, isProcessing: true });
+        if (toProcess) {
+          // Upload logic here
+          const [thumbnailResult, uploadResult] = await Promise.all([
+            toProcess.mimeType?.includes("video")
+              ? await uploadImageFile(toProcess)
+              : null,
+            await uploadFile(toProcess, (uploaded, total) => {
+              const progress = (uploaded / total) * 100;
+              set({
+                progressTracker: {
+                  ...get().progressTracker,
+                  [toProcess.id]: progress,
+                },
+              });
+            }),
+          ]);
+          const fromUploadResult =
+            "videoId" in uploadResult ? null : uploadResult.url;
+          await apiPost(`/conversations/${toProcess.conversationId}/messages`, {
+            content: {
+              attachments: [
+                {
+                  ...uploadResult,
+                  ...toProcess.metadata,
+                  id: toProcess.id,
+                  thumbnail:
+                    thumbnailResult?.url || fromUploadResult
+                      ? `${fromUploadResult}?width=300`
+                      : undefined,
+                },
+              ],
+            },
+          });
+          // After successful upload, remove the file from the queue
+          // in case of error, add the file back to the queue
+          get().removeSendingFile(toProcess.id);
+        }
+        set({ isProcessing: false });
+        get().processQueue();
+      } else {
+        set({ isProcessing: false });
+      }
+    },
+  };
+});
+
+function UploadingList({ conversationId }: { conversationId: number }) {
+  const files = useAttachmentSender((state) => state.files);
+  const conversationFiles = files.filter(
+    (f) => f.conversationId === conversationId
+  );
+  if (conversationFiles.length === 0) return null;
+  return (
+    <View>
+      {conversationFiles.map((file) => {
+        return (
+          <View
+            key={file.id}
+            style={{
+              padding: 8,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <Image
+              contentFit="fill"
+              source={{
+                uri: file.metadata.thumbnail,
+                blurhash: file.metadata.blurhash,
+                width: file.width,
+                height: file.height,
+              }}
+              style={{ width: 50, height: 50 }}
+            ></Image>
+            <View>
+              <ThemedText>{formatFileSize(file.metadata.size || 0)}</ThemedText>
+              <ProgressPercentage fileId={file.id} />
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 }
 
-function AttachmentButton() {
+function ProgressPercentage({ fileId }: { fileId: string }) {
+  const progressTracker = useAttachmentSender(
+    (state) => state.progressTracker[fileId] || 0
+  );
+  return <ThemedText>{progressTracker.toFixed(2)}%</ThemedText>;
+}
+function AttachmentButton({ conversationId }: { conversationId: number }) {
   const iconColor = useThemeColor({}, "icon");
+
+  const addFile = useAttachmentSender((state) => state.addFile);
 
   const handleAttachment = async () => {
     // Request permission
@@ -82,15 +247,29 @@ function AttachmentButton() {
 
     // Open image/video picker
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      mediaTypes: ["images", "videos", "livePhotos"],
       allowsEditing: true,
+      allowsMultipleSelection: true,
       quality: 1,
     });
+    if (!result.canceled) {
+      for (const asset of result.assets) {
+        const metadata = await getThumbnailAsync(asset);
 
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      const type = asset.type === "video" ? "video" : "image";
-      //   onSendAttachment?.(asset.uri, type);
+        addFile({
+          ...asset,
+          conversationId,
+          metadata: {
+            thumbnail: metadata.thumbnail,
+            width: metadata.width,
+            height: metadata.height,
+            size: asset.fileSize,
+            duration: asset.duration || undefined,
+            blurhash: metadata.blurhash,
+          },
+          id: `${asset.uri}-${Date.now()}`,
+        });
+      }
     }
   };
   return (
@@ -99,37 +278,3 @@ function AttachmentButton() {
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    padding: 12,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    borderTopWidth: 1,
-    gap: 8,
-  },
-  attachmentButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 2,
-  },
-  input: {
-    flex: 1,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    maxHeight: 100,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 2,
-  },
-});

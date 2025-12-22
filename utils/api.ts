@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
-const baseURL = `http://localhost:3010`;
 
+const baseURL = `http://192.168.68.51:3010`;
+console.log({ baseURL });
 let accessToken: string | null = null;
 export const getAcessToken = async () => {
   if (accessToken) return accessToken;
@@ -78,3 +79,7 @@ export const socket = io(baseURL, {
     cb({ token });
   },
 });
+
+export function sendTypingIndicator(conversationId: number, isTyping: boolean) {
+  socket.emit("typing", { conversationId, isTyping });
+}

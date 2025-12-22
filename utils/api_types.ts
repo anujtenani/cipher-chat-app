@@ -1,26 +1,48 @@
 export interface PublicUser {
+  // basic information
   username: string;
-  distance_km: number;
   bio: string;
-  location: string;
+  profile_photo?: MediaItem;
+
+  // demography
+  date_of_birth: string;
+  gender: string;
   country: string;
-  profile_photo: {
-    url: string;
-    thumbnail_url?: string;
-  };
-  last_seen_at: string;
-  media: {
-    // shown as  gallery of the user
-    url: string;
-    thumbnail_url?: string;
-    type: "image" | "video";
-  }[];
+
+  status_message: string; // like online status message
+  verified: boolean;
+
+  // location
+  distance_km: number;
+  location: string;
+
+  // activity
+  last_seen_at: string; // get online status from this (if last_seen_at within 5 minutes, show online)
+
+  media: MediaItem[];
+}
+
+export interface MediaItem {
+  url: string;
+  blurhash?: string;
+  thumbnail?: string;
+  width: number;
+  height: number;
+  id: string;
+  duration: number;
+  type: "image" | "video";
+  hlsURL?: string;
+}
+
+export interface AuthenticatedUser extends PublicUser {
+  email: string;
+  id: number;
 }
 
 export interface Conversation {
   id: number;
   unread_count: number;
-  participants: PublicUser[];
+  participants: (PublicUser & { id: number })[];
   last_message_at: string;
   last_message: Message;
 }
@@ -32,8 +54,9 @@ export interface Message {
     text: string;
     attachments?: {
       url: string;
+      blurhash?: string;
+      thumbnail?: string;
       type: "image" | "video";
-      thumbnail_url?: string;
     }[];
   };
   created_at: string;

@@ -1,3 +1,5 @@
+import prettyBytes from "pretty-bytes";
+
 export const formatDistance = (distance: number): string => {
   if (distance < 1) {
     return `${Math.round(distance * 1000)}m away`;
@@ -34,3 +36,21 @@ export const formatTimestamp = (dateString: string): string => {
 
   return date.toLocaleDateString();
 };
+
+export function randomString(size: number = 10) {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < size; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+export function formatFileSize(size: number): string {
+  return prettyBytes(size);
+}
+
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}

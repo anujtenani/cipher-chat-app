@@ -120,7 +120,6 @@ export default function BottomSheet({
               <ScrollView
                 bounces={false}
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={styles.contentContainer}
                 showsVerticalScrollIndicator={false}
               >
                 {children}
