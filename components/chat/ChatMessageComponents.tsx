@@ -74,7 +74,7 @@ export function MessageAttachmentMedia({
   timestamp: string;
 }) {
   if (!attachments || attachments.length === 0) return null;
-
+  console.log("Rendering attachments:", attachments);
   return (
     <View
       style={{
@@ -104,9 +104,9 @@ export function MessageAttachmentMedia({
         >
           {attachments.map((attachment, index) => (
             <Image
-              key={index}
+              key={String(index)}
               source={{
-                uri: attachment.thumbnail || attachment.url,
+                uri: attachment.thumbnail,
                 blurhash: attachment.blurhash,
               }}
               style={{
@@ -115,7 +115,8 @@ export function MessageAttachmentMedia({
                 borderRadius: 16,
                 marginBottom: index < attachments.length - 1 ? 6 : 0,
               }}
-              resizeMode="cover"
+              contentFit="fill"
+              contentPosition={"center"}
             />
           ))}
         </View>

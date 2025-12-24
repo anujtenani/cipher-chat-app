@@ -139,38 +139,46 @@ const useAttachmentSender = create<AttachmentSenderState>((set, get) => {
 
         set({ fileQueue: fileQueue, isProcessing: true });
         if (toProcess) {
-          // Upload logic here
-          const [thumbnailResult, uploadResult] = await Promise.all([
-            toProcess.mimeType?.includes("video")
-              ? await uploadImageFile(toProcess)
-              : null,
-            await uploadFile(toProcess, (uploaded, total) => {
-              const progress = (uploaded / total) * 100;
-              set({
-                progressTracker: {
-                  ...get().progressTracker,
-                  [toProcess.id]: progress,
+          try {
+            // Upload logic here
+            const [thumbnailResult, uploadResult] = await Promise.all([
+              toProcess.mimeType?.includes("video")
+                ? await uploadImageFile(toProcess)
+                : null,
+              await uploadFile(toProcess, (uploaded, total) => {
+                const progress = (uploaded / total) * 100;
+                set({
+                  progressTracker: {
+                    ...get().progressTracker,
+                    [toProcess.id]: progress,
+                  },
+                });
+              }),
+            ]);
+            const fromUploadResult =
+              "videoId" in uploadResult ? null : uploadResult.url;
+
+            await apiPost(
+              `/conversations/${toProcess.conversationId}/messages`,
+              {
+                content: {
+                  attachments: [
+                    {
+                      ...uploadResult,
+                      ...toProcess.metadata,
+                      id: toProcess.id,
+                      thumbnail:
+                        thumbnailResult?.url || fromUploadResult
+                          ? `${fromUploadResult}?width=300`
+                          : undefined,
+                    },
+                  ],
                 },
-              });
-            }),
-          ]);
-          const fromUploadResult =
-            "videoId" in uploadResult ? null : uploadResult.url;
-          await apiPost(`/conversations/${toProcess.conversationId}/messages`, {
-            content: {
-              attachments: [
-                {
-                  ...uploadResult,
-                  ...toProcess.metadata,
-                  id: toProcess.id,
-                  thumbnail:
-                    thumbnailResult?.url || fromUploadResult
-                      ? `${fromUploadResult}?width=300`
-                      : undefined,
-                },
-              ],
-            },
-          });
+              }
+            );
+          } catch (error) {
+            console.error("Error uploading file:", error);
+          }
           // After successful upload, remove the file from the queue
           // in case of error, add the file back to the queue
           get().removeSendingFile(toProcess.id);
@@ -248,14 +256,13 @@ function AttachmentButton({ conversationId }: { conversationId: number }) {
     // Open image/video picker
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images", "videos", "livePhotos"],
-      allowsEditing: true,
       allowsMultipleSelection: true,
-      quality: 1,
+      quality: 0.85,
     });
     if (!result.canceled) {
       for (const asset of result.assets) {
         const metadata = await getThumbnailAsync(asset);
-
+        console.log("Metadata for attachment:", metadata);
         addFile({
           ...asset,
           conversationId,

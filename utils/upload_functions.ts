@@ -132,7 +132,10 @@ export async function tusUpload(
     libraryId: number;
   }>("/media/bunnyUploadStreamTus", {
     filename,
-  }).then((data) => data);
+  }).then((data) => {
+    console.log("tus data", data);
+    return data;
+  });
   const blob = await fetch(file.uri).then((res) => res.blob());
   // Create a new tus upload
   return new Promise((resolve, reject) => {
@@ -152,20 +155,21 @@ export async function tusUpload(
       },
       onProgress,
       onSuccess: function () {
-        resolve({
+        const success = {
           // url: videoURL,
           thumbnail,
           id: randomString(),
           hlsURL,
           playURL,
           animationURL,
-          type: "video",
+          type: "video" as const,
           mimetype,
           videoId,
           libraryId: String(libraryId),
           name: filename,
-        });
-        console.log("success");
+        };
+        resolve(success);
+        console.log("success", success);
       },
     });
 

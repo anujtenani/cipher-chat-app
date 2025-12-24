@@ -12,6 +12,7 @@ export interface PublicUser {
   // basic information
   username: string;
   bio: string;
+  display_name: string;
   profile_photo?: MediaAsset & { type: "image" };
 
   // demography

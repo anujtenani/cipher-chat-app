@@ -38,7 +38,8 @@ export default function ThemedDatePicker({
 
   const formatDate = (date: Date): string => {
     if (date) {
-      return date.toLocaleDateString("en-US", {
+      // console.log(date, typeof date);
+      return new Date(date).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -109,7 +110,7 @@ export default function ThemedDatePicker({
               </View>
               <View style={{ alignItems: "center" }}>
                 <DateTimePicker
-                  value={value}
+                  value={new Date(value || new Date())}
                   mode="date"
                   display="spinner"
                   onChange={handleDateChange}
@@ -123,7 +124,7 @@ export default function ThemedDatePicker({
 
       {Platform.OS === "android" && showPicker && (
         <DateTimePicker
-          value={value || new Date()}
+          value={new Date(value || new Date())}
           mode="date"
           display="default"
           onChange={handleDateChange}

@@ -13,10 +13,10 @@ import {
   Dimensions,
   Image,
   ScrollView,
-  StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useSWR from "swr";
 
 const { width } = Dimensions.get("window");
@@ -38,6 +38,7 @@ export default function PublicProfilePage() {
   const iconColor = useThemeColor({}, "icon");
 
   const [starting, setStarting] = React.useState(false);
+  const insets = useSafeAreaInsets();
   const handleStartChat = () => {
     if (!user) return;
     // Navigate to chat screen with user
@@ -56,37 +57,52 @@ export default function PublicProfilePage() {
     // Handle report user
     console.log("Report user:", user.username);
   };
+  const age = calculateAge(user?.date_of_birth);
 
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ThemedView
+      style={{
+        flex: 1,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
+        paddingBottom: insets.bottom,
+      }}
+    >
       <Stack.Screen
         options={{
           title: (username as string) || "Profile",
-          headerRight: () => (
-            <TouchableOpacity style={{ marginRight: 8 }}>
-              <Ionicons
-                name="ellipsis-horizontal"
-                size={24}
-                color={iconColor}
-              />
-            </TouchableOpacity>
-          ),
+          headerBackButtonDisplayMode: "minimal",
+          // headerRight: () => (
+          //   <TouchableOpacity style={{ marginRight: 8 }}>
+          //     <Ionicons
+          //       name="ellipsis-horizontal"
+          //       size={24}
+          //       color={iconColor}
+          //     />
+          //   </TouchableOpacity>
+          // ),
         }}
       />
 
       {isLoading ? (
-        <View style={styles.loadingContainer}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <ActivityIndicator size="large" color={primaryColor} />
         </View>
       ) : !user ? (
-        <View style={styles.loadingContainer}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <ThemedText type="subtitle">User not found</ThemedText>
         </View>
       ) : (
-        <ScrollView style={styles.container}>
+        <ScrollView style={{ flex: 1 }}>
           {/* Header Section with Avatar and Basic Info */}
-          <View style={styles.headerSection}>
-            <View style={styles.avatarContainer}>
+          <View style={{ alignItems: "center", padding: 16, paddingBottom: 8 }}>
+            <View
+              style={{ alignItems: "center", padding: 16, paddingBottom: 8 }}
+            >
               <Avatar
                 uri={user.profile_photo?.url}
                 name={user.username}
@@ -95,17 +111,29 @@ export default function PublicProfilePage() {
               />
               {user.verified && (
                 <View
-                  style={[
-                    styles.verifiedBadge,
-                    { backgroundColor: primaryColor },
-                  ]}
+                  style={{
+                    position: "absolute",
+                    bottom: 4,
+                    right: 4,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 3,
+                    borderColor: "white",
+                    backgroundColor: primaryColor,
+                  }}
                 >
                   <Ionicons name="checkmark" size={16} color="white" />
                 </View>
               )}
             </View>
 
-            <ThemedText type="title" style={styles.username}>
+            <ThemedText
+              type="title"
+              style={{ fontSize: 28, fontWeight: "700", marginBottom: 4 }}
+            >
               {user.username}
             </ThemedText>
 
@@ -114,29 +142,39 @@ export default function PublicProfilePage() {
                 type="caption"
                 lightColor={mutedColor}
                 darkColor={mutedColor}
-                style={styles.statusMessage}
+                style={{
+                  fontStyle: "italic",
+                  textAlign: "center",
+                  paddingHorizontal: 32,
+                }}
               >
                 &apos;{user.status_message}&apos;
               </ThemedText>
             )}
           </View>
 
-          {/* Info Cards */}
-          <View style={styles.infoSection}>
-            {/* Location & Distance */}
+          <View style={{ paddingHorizontal: 16, gap: 12, marginBottom: 8 }}>
             <View
-              style={[
-                styles.infoCard,
-                { backgroundColor: cardColor, borderColor },
-              ]}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 16,
+                borderRadius: 12,
+                borderWidth: 1,
+                gap: 12,
+                backgroundColor: cardColor,
+                borderColor,
+              }}
             >
               <Ionicons
                 name="location-outline"
                 size={20}
                 color={primaryColor}
               />
-              <View style={styles.infoTextContainer}>
-                <ThemedText type="defaultSemiBold">{user.location}</ThemedText>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="defaultSemiBold">
+                  {user.location || user.country}
+                </ThemedText>
                 <ThemedText
                   type="caption"
                   lightColor={mutedColor}
@@ -147,18 +185,25 @@ export default function PublicProfilePage() {
               </View>
             </View>
 
-            {/* Age & Gender */}
             <View
-              style={[
-                styles.infoCard,
-                { backgroundColor: cardColor, borderColor },
-              ]}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 16,
+                borderRadius: 12,
+                borderWidth: 1,
+                gap: 12,
+                backgroundColor: cardColor,
+                borderColor,
+              }}
             >
               <Ionicons name="person-outline" size={20} color={primaryColor} />
-              <View style={styles.infoTextContainer}>
-                <ThemedText type="defaultSemiBold">
-                  {calculateAge(user.date_of_birth)} years old
-                </ThemedText>
+              <View style={{ flex: 1 }}>
+                {age ? (
+                  <ThemedText type="defaultSemiBold">
+                    {age} years old
+                  </ThemedText>
+                ) : null}
                 <ThemedText
                   type="caption"
                   lightColor={mutedColor}
@@ -172,15 +217,21 @@ export default function PublicProfilePage() {
 
           {/* Bio Section */}
           {user.bio && (
-            <View style={styles.section}>
-              <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+            <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+              <ThemedText
+                type="defaultSemiBold"
+                style={{ fontSize: 18, marginBottom: 12 }}
+              >
                 About
               </ThemedText>
               <View
-                style={[
-                  styles.bioCard,
-                  { backgroundColor: cardColor, borderColor },
-                ]}
+                style={{
+                  padding: 16,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  backgroundColor: cardColor,
+                  borderColor,
+                }}
               >
                 <ThemedText>{user.bio}</ThemedText>
               </View>
@@ -189,26 +240,46 @@ export default function PublicProfilePage() {
 
           {/* Media Gallery */}
           {user.media && user.media.length > 0 && (
-            <View style={styles.section}>
-              <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+            <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+              <ThemedText
+                type="defaultSemiBold"
+                style={{ fontSize: 18, marginBottom: 12 }}
+              >
                 Photos & Videos ({user.media.length})
               </ThemedText>
-              <View style={styles.mediaGrid}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
                 {user.media.map((item, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={styles.mediaItem}
+                    style={{
+                      width: MEDIA_GRID_SIZE,
+                      height: MEDIA_GRID_SIZE,
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      position: "relative",
+                    }}
                     onPress={() => {
                       // TODO: Open media viewer
                     }}
                   >
                     <Image
                       source={{ uri: item.thumbnail }}
-                      style={styles.mediaImage}
+                      style={{ width: "100%", height: "100%" }}
                       resizeMode="cover"
                     />
                     {item.type === "video" && (
-                      <View style={styles.videoOverlay}>
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "rgba(0, 0, 0, 0.3)",
+                        }}
+                      >
                         <Ionicons name="play-circle" size={32} color="white" />
                       </View>
                     )}
@@ -217,140 +288,33 @@ export default function PublicProfilePage() {
               </View>
             </View>
           )}
-
-          {/* Action Button */}
-          <TouchableOpacity
-            style={[styles.messageButton, { backgroundColor: primaryColor }]}
-            onPress={() => {
-              // TODO: Navigate to chat or start conversation
-              // router.push(`/chat/${user.id}`)
-            }}
-          >
-            <Ionicons name="chatbubble-outline" size={20} color="white" />
-            <ThemedText
-              type="defaultSemiBold"
-              style={styles.messageButtonText}
-              lightColor="white"
-              darkColor="white"
-            >
-              Send Message
-            </ThemedText>
-          </TouchableOpacity>
-
-          {/* Bottom Spacing */}
-          <View style={{ height: 32 }} />
+          <View style={{ height: 12 }} />
         </ScrollView>
       )}
+      <TouchableOpacity
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          marginHorizontal: 16,
+          marginTop: 24,
+          padding: 16,
+          borderRadius: 12,
+          gap: 8,
+          backgroundColor: primaryColor,
+        }}
+        onPress={handleStartChat}
+      >
+        <Ionicons name="chatbubble-outline" size={20} color="white" />
+        <ThemedText
+          type="defaultSemiBold"
+          style={{ fontSize: 16 }}
+          lightColor="white"
+          darkColor="white"
+        >
+          Send Message
+        </ThemedText>
+      </TouchableOpacity>
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerSection: {
-    alignItems: "center",
-    paddingTop: 24,
-    paddingBottom: 16,
-  },
-  avatarContainer: {
-    position: "relative",
-    marginBottom: 16,
-  },
-  verifiedBadge: {
-    position: "absolute",
-    bottom: 4,
-    right: 4,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 3,
-    borderColor: "white",
-  },
-  username: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  statusMessage: {
-    fontStyle: "italic",
-    textAlign: "center",
-    paddingHorizontal: 32,
-  },
-  infoSection: {
-    paddingHorizontal: 16,
-    gap: 12,
-    marginBottom: 8,
-  },
-  infoCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 12,
-  },
-  infoTextContainer: {
-    flex: 1,
-  },
-  section: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 12,
-  },
-  bioCard: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  mediaGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  mediaItem: {
-    width: MEDIA_GRID_SIZE,
-    height: MEDIA_GRID_SIZE,
-    borderRadius: 8,
-    overflow: "hidden",
-    position: "relative",
-  },
-  mediaImage: {
-    width: "100%",
-    height: "100%",
-  },
-  videoOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-  },
-  messageButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 16,
-    marginTop: 24,
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  messageButtonText: {
-    fontSize: 16,
-  },
-});

@@ -1,9 +1,11 @@
+import BottomModal from "@/components/BottomModal";
 import ChatInput from "@/components/chat/ChatInput";
 import { MessageBubble } from "@/components/chat/ChatMessageComponents";
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/Avatar";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { useAuth } from "@/hooks/useAuth";
+import useToggle from "@/hooks/useToggle";
 import { useTyping } from "@/hooks/useTyping";
 import { apiGet, apiPost, socket } from "@/utils/api";
 import { Conversation, Message, PublicUser } from "@/utils/api_types";
@@ -45,6 +47,7 @@ export default function ChatPanel() {
     apiGet
   );
 
+  const [bottomSheet, toggleBottomSheet] = useToggle();
   useEffect(() => {
     apiPost("/messages/read", { conversationId: Number(id) });
   }, [id]);
@@ -57,9 +60,9 @@ export default function ChatPanel() {
         options={{
           headerRight: () => (
             <Pressable
-              onPress={() =>
-                router.push(`/public_profile?username=${otherUser?.username}`)
-              }
+              onPress={() => {
+                router.push(`/public_profile?username=${otherUser?.username}`);
+              }}
             >
               <Avatar
                 size={28}
@@ -81,10 +84,26 @@ export default function ChatPanel() {
         data={msgs}
         ListEmptyComponent={() => <ListEmptyComponent otherUser={otherUser} />}
         renderItem={({ item }) => (
-          <MessageBubble
-            message={item}
-            isCurrentUser={item.sender.username === user?.username}
-          />
+          <Pressable
+            onLongPress={() => {
+              toggleBottomSheet();
+            }}
+            onPress={() => {
+              router.push(
+                "/gallery?source=conversation&conversation_id=" +
+                  id +
+                  "&start_id=" +
+                  item.id
+              );
+              console.log("item pressed");
+            }}
+          >
+            {/* <ThemedText>Item</ThemedText> */}
+            <MessageBubble
+              message={item}
+              isCurrentUser={item.sender.username === user?.username}
+            />
+          </Pressable>
         )}
         keyExtractor={(item) => item.id.toString()}
         inverted={msgs.length > 0}
@@ -95,6 +114,38 @@ export default function ChatPanel() {
         style={{ flex: 1 }}
       />
       <ChatInput conversationId={Number(id)} onSendMessage={() => mutate()} />
+      <BottomModal visible={bottomSheet} onClose={toggleBottomSheet}>
+        <ThemedView
+          style={{
+            padding: 16,
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 12,
+          }}
+        >
+          <ThemedText
+            style={{ fontSize: 18, fontWeight: "600", marginBottom: 12 }}
+          >
+            Message Options
+          </ThemedText>
+          <ThemedText
+            style={{ fontSize: 16, paddingVertical: 12 }}
+            onPress={() => {
+              console.log("Delete message");
+              toggleBottomSheet();
+            }}
+          >
+            Delete Message
+          </ThemedText>
+          <ThemedText
+            style={{ fontSize: 16, paddingVertical: 12, color: "red" }}
+            onPress={() => {
+              toggleBottomSheet();
+            }}
+          >
+            Cancel
+          </ThemedText>
+        </ThemedView>
+      </BottomModal>
     </ThemedView>
   );
 }

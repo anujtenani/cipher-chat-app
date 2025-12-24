@@ -55,7 +55,8 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
-export const calculateAge = (dateOfBirth: string) => {
+export const calculateAge = (dateOfBirth?: string) => {
+  if (!dateOfBirth) return null;
   const birthDate = new Date(dateOfBirth);
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();

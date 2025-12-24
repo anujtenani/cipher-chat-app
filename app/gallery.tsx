@@ -15,7 +15,9 @@ const Gallery = () => {
     source: "user_gallery" | "conversation";
   }>();
   const { data: album, isLoading } = useSWR<{ media: MediaAsset[] }>(
-    `/misc/gallery_media?source=${source}&username=${username}&conversation_id=${conversation_id}`
+    `/media/gallery?source=${source}&username=${
+      username || ""
+    }&conversation_id=${conversation_id || ""}`
   );
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const ref = useRef<GalleryRef>(null);
@@ -23,9 +25,11 @@ const Gallery = () => {
     if (!album?.media) return;
 
     const initialIndex = album.media.findIndex((item) => item.id == start_id);
-    console.log("initial index", initialIndex);
-    if (ref?.current) {
-      ref.current?.setIndex(initialIndex);
+    console.log("initial index", initialIndex, album.media);
+    if (initialIndex !== -1) {
+      if (ref?.current) {
+        ref.current?.setIndex(initialIndex);
+      }
     }
     // if (initialIndex !== -1) {
     // setCurrentIndex(initialIndex);

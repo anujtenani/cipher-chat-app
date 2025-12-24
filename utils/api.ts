@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
 
-const baseURL = `http://192.168.68.55:3010`;
+const baseURL = `http://192.168.68.54:3010`;
 let accessToken: string | null = null;
 export const getAcessToken = async () => {
   if (accessToken) return accessToken;

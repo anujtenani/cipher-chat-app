@@ -1,19 +1,19 @@
 import Avatar from "@/components/ui/Avatar";
-import ThemedButton from "@/components/ui/ThemedButton";
 import ThemedDatePicker from "@/components/ui/ThemedDatePicker";
-import ThemedInput from "@/components/ui/ThemedInput";
+import ThemedGenderSelector from "@/components/ui/ThemedGenderSelector";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuth } from "@/hooks/useAuth";
 import { uploadImageFile } from "@/utils/upload_functions";
 import * as ImagePicker from "expo-image-picker";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, View } from "react-native";
 export default function ProfileSettings() {
   const user = useAuth((state) => state.user);
   const updateProfile = useAuth((state) => state.updateProfile);
   const [progress, setProgress] = React.useState(0);
+  const router = useRouter();
   const pickImage = async () => {
     // Request permissions
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -57,6 +57,7 @@ export default function ProfileSettings() {
       <Stack.Screen
         options={{
           title: "Profile",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Pressable onPress={pickImage} style={{ alignSelf: "center" }}>
@@ -98,10 +99,55 @@ export default function ProfileSettings() {
           DATE OF BIRTH
         </ThemedText>
         <ThemedDatePicker
-          value={formData.dob}
-          onChange={(d) => handleChange("dob")(d.toString())}
+          value={user?.date_of_birth}
+          onChange={(d) => updateProfile({ date_of_birth: d.toString() })}
         />
       </View>
+      <View
+        style={{
+          borderBottomWidth: 1,
+          padding: 12,
+          borderColor: useThemeColor({}, "border"),
+          flexDirection: "column",
+          // alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <ThemedText style={{ fontSize: 12, fontWeight: "bold" }}>
+          GENDER
+        </ThemedText>
+        <ThemedGenderSelector
+          value={user?.gender}
+          onChange={(gender: string) =>
+            updateProfile({
+              gender,
+            })
+          }
+          style={{ flexDirection: "row" }}
+        ></ThemedGenderSelector>
+      </View>
+      <ProfileItem
+        title="BIO"
+        description={user?.bio || "You haven't set a bio yet. Tap to update."}
+        onPress={() => {
+          router.push("/profile_wizard/update_bio");
+        }}
+      />
+    </ScrollView>
+  );
+}
+
+function ProfileItem({
+  title,
+  description,
+  onPress,
+}: {
+  title: string;
+  description: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress}>
       <View
         style={{
           borderBottomWidth: 1,
@@ -113,33 +159,10 @@ export default function ProfileSettings() {
         }}
       >
         <ThemedText style={{ fontSize: 12, fontWeight: "bold" }}>
-          BIO
+          {title}
         </ThemedText>
-        <ThemedInput
-          value={formData.bio}
-          placeholder={"Add a bio"}
-          onChangeText={handleChange("bio")}
-        ></ThemedInput>
+        <ThemedText>{description}</ThemedText>
       </View>
-
-      {/* <View
-        style={{
-          borderBottomWidth: 1,
-          padding: 12,
-          gap: 8,
-          borderColor: useThemeColor({}, "border"),
-          flexDirection: "column",
-          justifyContent: "space-between",
-        }}
-      >
-        <ThemedText style={{ fontSize: 12, fontWeight: "bold" }}>
-          MEDIA
-        </ThemedText>
-        <ThemedText type="subtitle">42 photos and videos</ThemedText>
-      </View> */}
-
-      <View style={{ marginTop: 20 }}></View>
-      <ThemedButton title="Submit"></ThemedButton>
-    </ScrollView>
+    </Pressable>
   );
 }
