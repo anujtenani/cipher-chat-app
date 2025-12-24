@@ -3,7 +3,8 @@ import { apiPost, setAccessToken } from "@/utils/api";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import ScaleInPressable from "../ScaleInPressable";
 import ThemedButton from "../ui/ThemedButton";
 import ThemedInput from "../ui/ThemedInput";
 
@@ -65,7 +66,7 @@ export default function LoginForm() {
         onPress={handleSubmit}
         title="SUBMIT"
       ></ThemedButton>
-      <Pressable
+      <ScaleInPressable
         onPress={() => router.push("/signup")}
         style={{ marginTop: 42 }}
       >
@@ -79,7 +80,7 @@ export default function LoginForm() {
         >
           Don&apos;t have an account? Sign up
         </Text>
-      </Pressable>
+      </ScaleInPressable>
     </View>
   );
 }

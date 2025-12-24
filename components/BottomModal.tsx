@@ -1,9 +1,8 @@
 import { useThemeColor } from "@/hooks/use-theme-color";
 import {
   Dimensions,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -24,7 +23,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 import { ThemedText } from "./ui/ThemedText";
 
-import React, { useEffect } from "react";
+import useKeyboardHeight from "@/hooks/useKeyboardHeight";
+import React, { useEffect, useState } from "react";
 import ThemedButton from "./ui/ThemedButton";
 
 export default function BottomModal({
@@ -33,8 +33,10 @@ export default function BottomModal({
   disabled,
   onClose,
   children,
+  onCancel,
   onSuccess,
 }: {
+  onCancel?: () => void;
   children: React.ReactNode;
   onSuccess?: () => void;
   title?: string;
@@ -43,6 +45,8 @@ export default function BottomModal({
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const [contentHeight, setContentHeight] = useState(0);
+  const keyboardHeight = useKeyboardHeight();
   return (
     <Modal
       transparent
@@ -51,9 +55,12 @@ export default function BottomModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <BottomSheet visible={visible} onClose={onClose}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+      <BottomSheet
+        visible={visible}
+        onClose={onClose}
+        contentHeight={contentHeight}
+      >
+        <View
           style={{
             paddingBottom: 24 + insets.bottom,
             // backgroundColor: useThemeColor({}, "background"),
@@ -62,6 +69,10 @@ export default function BottomModal({
             shadowOpacity: 0.1,
             shadowRadius: 4,
             elevation: 5,
+          }}
+          onLayout={(event) => {
+            const { height } = event.nativeEvent.layout;
+            setContentHeight(height);
           }}
         >
           <ThemedText
@@ -82,37 +93,51 @@ export default function BottomModal({
           >
             {children}
           </ScrollView>
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <ThemedButton
-              onPress={onClose}
-              title="Cancel"
-              style={{
-                flex: 1,
-                backgroundColor: "transparent",
-              }}
-            ></ThemedButton>
-            <ThemedButton
-              title="Submit"
-              onPress={onSuccess}
-              style={{ flex: 2 }}
-            ></ThemedButton>
-          </View>
-        </KeyboardAvoidingView>
+          {onCancel || onSuccess ? (
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <ThemedButton
+                onPress={onCancel || onClose}
+                title="Cancel"
+                style={{
+                  flex: 1,
+                  backgroundColor: "transparent",
+                }}
+              ></ThemedButton>
+              <ThemedButton
+                title="Submit"
+                onPress={onSuccess}
+                style={{ flex: 2 }}
+              ></ThemedButton>
+            </View>
+          ) : null}
+          <View style={{ height: keyboardHeight }} />
+        </View>
       </BottomSheet>
     </Modal>
   );
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const SHEET_HEIGHT = SCREEN_HEIGHT * 0.4;
+const MAX_SHEET_HEIGHT = SCREEN_HEIGHT * 0.8;
 
 type BottomSheetProps = {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  contentHeight: number;
 };
 
-export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
+export function BottomSheet({
+  visible,
+  onClose,
+  children,
+  contentHeight,
+}: BottomSheetProps) {
+  const SHEET_HEIGHT = Math.min(
+    contentHeight + 56, // Adding padding for handle and margins
+    MAX_SHEET_HEIGHT
+  );
+
   const translateY = useSharedValue(SHEET_HEIGHT);
   const backdropOpacity = useSharedValue(0);
 
@@ -140,7 +165,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
         easing: Easing.in(Easing.ease),
       });
     }
-  }, [backdropOpacity, translateY, visible]);
+  }, [backdropOpacity, translateY, visible, SHEET_HEIGHT]);
 
   const panGesture = Gesture.Pan()
     .onUpdate((e) => {
@@ -174,7 +199,9 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector gesture={panGesture}>
         <View style={StyleSheet.absoluteFill}>
-          <Animated.View style={[styles.backdrop, backdropStyle]} />
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+            <Animated.View style={[styles.backdrop, backdropStyle]} />
+          </Pressable>
 
           <Animated.View
             style={[
@@ -200,7 +227,7 @@ const styles = StyleSheet.create({
   sheet: {
     position: "absolute",
     bottom: 0,
-    height: SHEET_HEIGHT,
+    maxHeight: MAX_SHEET_HEIGHT,
     width: "99%",
     alignSelf: "center",
     borderTopLeftRadius: 16,

@@ -1,6 +1,7 @@
 import BottomModal from "@/components/BottomModal";
 import ChatInput from "@/components/chat/ChatInput";
 import { MessageBubble } from "@/components/chat/ChatMessageComponents";
+import ScaleInPressable from "@/components/ScaleInPressable";
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/Avatar";
 import { ThemedText } from "@/components/ui/ThemedText";
@@ -84,7 +85,7 @@ export default function ChatPanel() {
         data={msgs}
         ListEmptyComponent={() => <ListEmptyComponent otherUser={otherUser} />}
         renderItem={({ item }) => (
-          <Pressable
+          <ScaleInPressable
             onLongPress={() => {
               toggleBottomSheet();
             }}
@@ -103,7 +104,7 @@ export default function ChatPanel() {
               message={item}
               isCurrentUser={item.sender.username === user?.username}
             />
-          </Pressable>
+          </ScaleInPressable>
         )}
         keyExtractor={(item) => item.id.toString()}
         inverted={msgs.length > 0}

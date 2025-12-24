@@ -7,6 +7,7 @@ import { uploadFile, uploadImageFile } from "@/utils/upload_functions";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -65,6 +66,12 @@ export default function ChatInput({
         }}
       >
         <AttachmentButton conversationId={conversationId} />
+        <TouchableOpacity
+          style={{ padding: 8 }}
+          onPress={() => router.push("/camera")}
+        >
+          <Ionicons name="camera-outline" size={24} color={iconColor} />
+        </TouchableOpacity>
         <ThemedInput
           style={{ flex: 1, borderRadius: 20 }}
           placeholder="Type a message..."

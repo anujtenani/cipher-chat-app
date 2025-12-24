@@ -1,9 +1,5 @@
-import {
-  ActivityIndicator,
-  Text,
-  TouchableHighlight,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
+import ScaleInPressable from "../ScaleInPressable";
 
 export default function ThemedButton({
   title,
@@ -21,7 +17,7 @@ export default function ThemedButton({
   title?: string;
 }) {
   return (
-    <TouchableHighlight
+    <ScaleInPressable
       onPress={onPress}
       disabled={isLoading || disabled}
       style={[
@@ -63,6 +59,6 @@ export default function ThemedButton({
           </>
         )}
       </View>
-    </TouchableHighlight>
+    </ScaleInPressable>
   );
 }

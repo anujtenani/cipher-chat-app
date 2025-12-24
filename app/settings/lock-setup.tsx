@@ -29,10 +29,7 @@ function LockSetupSettingsScreen() {
   const userEmail = useAuth((state) => state.user?.email);
   const [visible, toggleVisible] = useToggle(false);
   const savePin = () => {
-    // Save the pin code logic here
     toggleVisible();
-    // apiPost("/auth/");
-    //TODO save this on the server as well
     setSettings({ pinCode: pin, recoveryEmail: email || userEmail || "" });
   };
   const canSave = pin.length >= 4 && isValidEmail(userEmail || email);
@@ -78,7 +75,7 @@ function LockSetupSettingsScreen() {
             <View style={{ padding: 16 }}>
               <ThemedInput
                 keyboardType="number-pad"
-                autoFocus
+                autoFocus={false}
                 textAlign="center"
                 placeholder="Enter new pin code"
                 value={pin}
@@ -94,7 +91,7 @@ function LockSetupSettingsScreen() {
                 </ThemedText>
                 <ThemedInput
                   keyboardType="email-address"
-                  autoFocus
+                  autoFocus={false}
                   placeholder="Enter your email"
                   value={email}
                   onChangeText={setEmail}
