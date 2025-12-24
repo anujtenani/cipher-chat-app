@@ -38,7 +38,7 @@ export default function ProfileSettings() {
             setProgress(progress);
           }
         );
-        updateProfile({ profile_photo: { url: uploadResult.url } });
+        updateProfile({ profile_photo: uploadResult });
       }
     } catch (error) {
       console.error("Error picking image:", error);

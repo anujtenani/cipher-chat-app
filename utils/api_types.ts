@@ -1,8 +1,18 @@
+import { UploadedAsset } from "./upload_functions";
+
+export type MediaAsset = UploadedAsset & {
+  thumbnail?: string;
+  width: number;
+  height: number;
+  blurhash?: string;
+  duration?: number;
+};
+
 export interface PublicUser {
   // basic information
   username: string;
   bio: string;
-  profile_photo?: MediaItem;
+  profile_photo?: MediaAsset & { type: "image" };
 
   // demography
   date_of_birth: string;
@@ -19,19 +29,7 @@ export interface PublicUser {
   // activity
   last_seen_at: string; // get online status from this (if last_seen_at within 5 minutes, show online)
 
-  media: MediaItem[];
-}
-
-export interface MediaItem {
-  url: string;
-  blurhash?: string;
-  thumbnail?: string;
-  width: number;
-  height: number;
-  id: string;
-  duration: number;
-  type: "image" | "video";
-  hlsURL?: string;
+  media: MediaAsset[];
 }
 
 export interface AuthenticatedUser extends PublicUser {

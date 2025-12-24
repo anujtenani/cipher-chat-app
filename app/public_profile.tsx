@@ -203,7 +203,7 @@ export default function PublicProfilePage() {
                     }}
                   >
                     <Image
-                      source={{ uri: item.thumbnail || item.url }}
+                      source={{ uri: item.thumbnail }}
                       style={styles.mediaImage}
                       resizeMode="cover"
                     />

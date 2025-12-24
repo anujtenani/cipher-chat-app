@@ -8,9 +8,12 @@ export interface UploadedImageAsset {
   url: string;
   mimetype?: string;
   name: string;
+  type: "image";
+  id: string;
 }
 export interface UploadedVideoAsset {
   thumbnail: string;
+  id: string;
   libraryId: string;
   videoId: string;
   mimetype?: string;
@@ -19,6 +22,7 @@ export interface UploadedVideoAsset {
   // url: string;
   animationURL: string;
   name: string;
+  type: "video";
 }
 
 export type UploadedAsset = UploadedImageAsset | UploadedVideoAsset;
@@ -94,8 +98,10 @@ export async function uploadImageFile(
   return {
     // key: fields.key,
     url: uri,
+    id: randomString(),
     mimetype: file.mimeType,
     name: filename,
+    type: "image",
   };
 }
 
@@ -149,9 +155,11 @@ export async function tusUpload(
         resolve({
           // url: videoURL,
           thumbnail,
+          id: randomString(),
           hlsURL,
           playURL,
           animationURL,
+          type: "video",
           mimetype,
           videoId,
           libraryId: String(libraryId),

@@ -1,5 +1,5 @@
 import RenderGalleryItem from "@/components/gallery/RenderGalleryItem";
-import { MediaItem } from "@/utils/api_types";
+import { MediaAsset } from "@/utils/api_types";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -14,7 +14,7 @@ const Gallery = () => {
     start_id: string;
     source: "user_gallery" | "conversation";
   }>();
-  const { data: album, isLoading } = useSWR<{ media: MediaItem[] }>(
+  const { data: album, isLoading } = useSWR<{ media: MediaAsset[] }>(
     `/misc/gallery_media?source=${source}&username=${username}&conversation_id=${conversation_id}`
   );
   const [currentIndex, setCurrentIndex] = useState<number>(0);

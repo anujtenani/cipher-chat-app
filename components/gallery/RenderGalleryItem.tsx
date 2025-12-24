@@ -1,4 +1,4 @@
-import { MediaItem } from "@/utils/api_types";
+import { MediaAsset } from "@/utils/api_types";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useEvent } from "expo";
 import { Image } from "expo-image";
@@ -9,7 +9,7 @@ import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface RenderGalleryItemProps {
-  item: MediaItem;
+  item: MediaAsset;
   width?: number;
   height?: number;
   setImageDimensions: (dimensions: { width: number; height: number }) => void;
@@ -29,13 +29,11 @@ const RenderGalleryItem: React.FC<RenderGalleryItemProps> = ({
   item,
   setImageDimensions,
 }) => {
-  console.log("type", item.type);
-  const isVideo = item.type === "video";
   const imageSource = {
-    uri: isVideo ? item.thumbnail : item.url || item.thumbnail,
+    uri: item.type === "video" ? item.thumbnail : item.url || item.thumbnail,
   };
   const [shouldPlay, setShouldPlay] = useState(false);
-  if (shouldPlay) {
+  if (shouldPlay && item.type === "video") {
     return <RenderVideoItem item={item} />;
   }
   return (
@@ -54,7 +52,7 @@ const RenderGalleryItem: React.FC<RenderGalleryItemProps> = ({
             height: item.height,
           });
         }}
-        sharedTransitionTag={`item-${item.id}`}
+        // sharedTransitionTag={`item-${item.id}`}
         source={imageSource}
         placeholder={{ blurhash: item.blurhash }}
         style={{
@@ -64,7 +62,7 @@ const RenderGalleryItem: React.FC<RenderGalleryItemProps> = ({
         resizeMode="cover"
       />
 
-      {isVideo && (
+      {item.type === "video" && (
         <>
           {/* Video Play Icon Overlay */}
           <View
@@ -115,7 +113,7 @@ const RenderGalleryItem: React.FC<RenderGalleryItemProps> = ({
   );
 };
 
-function RenderVideoItem({ item }: { item: MediaItem }) {
+function RenderVideoItem({ item }: { item: MediaAsset & { type: "video" } }) {
   const player = useVideoPlayer(
     item.hlsURL || "",
     // "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_5MB.mp4",

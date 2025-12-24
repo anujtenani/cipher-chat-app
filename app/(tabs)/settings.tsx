@@ -19,10 +19,11 @@ export default function Settings() {
     const subject = "Cipher Chat Request";
 
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
-
     const canOpen = await Linking.canOpenURL(mailtoUrl);
     if (canOpen) {
-      await Linking.openURL(mailtoUrl);
+      await Linking.openURL(mailtoUrl).catch((error) => {
+        Alert.alert("Error", "Could not open email client");
+      });
     } else {
       Alert.alert("Error", "Could not open email client");
     }
@@ -30,6 +31,7 @@ export default function Settings() {
   const bgColor = useThemeColor({}, "background");
   return (
     <ScrollView style={{ flex: 1, backgroundColor: bgColor }}>
+      <Stack.Screen options={{ title: "Settings" }} />
       <ThemedView style={{ flex: 1 }}>
         <Stack.Screen options={{ title: "Settings" }} />
         <ProfileCard></ProfileCard>
@@ -47,17 +49,18 @@ export default function Settings() {
 
         <SettingsSectionTitle title="Help & About"></SettingsSectionTitle>
         <SettingsListItem title="Contact Us" onPress={contactEmail} />
-        <SettingsListItem
-          title="FAQ"
-          onPress={goto("/settings/webview?page=faq")}
-        />
+
         <SettingsListItem
           title="Terms of Service"
-          onPress={goto("/settings/webview?page=terms")}
+          onPress={goto(
+            "/settings/webview?url=https://cipher-chat-api.hideitpro.com/static/terms.html&title=Terms of Service"
+          )}
         />
         <SettingsListItem
           title="Privacy Policy"
-          onPress={goto("/settings/webview?page=privacy")}
+          onPress={goto(
+            "/settings/webview?url=https://cipher-chat-api.hideitpro.com/static/privacy.html&title=Privacy Policy"
+          )}
         ></SettingsListItem>
 
         <LogoutButton />
