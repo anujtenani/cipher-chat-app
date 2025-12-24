@@ -1,4 +1,3 @@
-import BottomModal from "@/components/BottomModal";
 import Avatar from "@/components/ui/Avatar";
 import ThemedButton from "@/components/ui/ThemedButton";
 import ThemedInput from "@/components/ui/ThemedInput";
@@ -12,11 +11,12 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import useSWR from "swr";
+import { useDebounceValue } from "usehooks-ts";
 
 export default function NearbyUsers() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useDebounceValue("", 300);
 
   const { data, isLoading, mutate, isValidating } = useSWR<{
     users: PublicUser[];
@@ -28,16 +28,11 @@ export default function NearbyUsers() {
     apiGet
   );
 
-  const [visible, setVisible] = React.useState(false);
-  const [selectedUser, setSelectedUser] = React.useState<PublicUser | null>(
-    null
-  );
-
-  const toggleVisible = () => setVisible(!visible);
-
+  const router = useRouter();
   const handleUserPress = (user: PublicUser) => {
-    setSelectedUser(user);
-    setVisible(true);
+    router.push(`/public_profile?username=${user.username}`);
+    // setSelectedUser(user);
+    // setVisible(true);
   };
 
   const renderItem = ({ item }: { item: PublicUser }) => (
@@ -51,24 +46,13 @@ export default function NearbyUsers() {
 
   return (
     <React.Fragment>
-      <BottomModal
-        visible={visible}
-        title={selectedUser?.username}
-        onClose={toggleVisible}
-      >
-        <RenderBottomSheetContent
-          user={selectedUser!}
-          toggleClose={toggleVisible}
-        />
-      </BottomModal>
-
       <View style={{ flex: 1 }}>
         <View style={{ padding: 16, paddingBottom: 8 }}>
           <ThemedInput
             placeholder="Search nearby users..."
-            value={search}
+            defaultValue={search}
             onChangeText={setSearch}
-            leftIcon="search-outline"
+            // leftIcon="search-outline"
           />
         </View>
         <FlatList

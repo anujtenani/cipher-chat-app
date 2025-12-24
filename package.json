@@ -50,6 +50,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-actions-sheet": "^10.1.1",
     "react-native-awesome-gallery": "^0.4.3",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-reanimated": "~4.1.1",
@@ -62,6 +63,7 @@
     "socket.io-client": "^4.8.1",
     "swr": "^2.3.8",
     "tus-js-client": "^4.3.1",
+    "usehooks-ts": "^3.1.1",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

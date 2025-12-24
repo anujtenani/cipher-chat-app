@@ -60,6 +60,7 @@ export default function LoginForm() {
       ></ThemedInput>
 
       <ThemedButton
+        disabled={submitting || !username || !password}
         isLoading={submitting}
         onPress={handleSubmit}
         title="SUBMIT"

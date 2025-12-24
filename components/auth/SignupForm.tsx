@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { apiPost, setAccessToken } from "@/utils/api";
+import { apiPost, getUserInfo, setAccessToken } from "@/utils/api";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
@@ -13,26 +13,34 @@ export default function SignupForm() {
   const setUser = useAuth((state) => state.setUser);
   const [submitting, setSubmitting] = React.useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitting(true);
+    const userInfo = await getUserInfo();
+
     apiPost<{ user: any; access_token: string; error: string }>(
       "/auth/signup",
       {
         username,
         password,
+        info: userInfo,
       }
-    ).then((data) => {
-      setSubmitting(false);
-      if (data.error) {
-        alert(data.error);
-        return;
-      } else {
-        setAccessToken(data.access_token).then(() => {
-          setUser(data.user);
-          router.replace("/home");
-        });
-      }
-    });
+    )
+      .then((data) => {
+        setSubmitting(false);
+        if (data.error) {
+          alert(data.error);
+          return;
+        } else {
+          setAccessToken(data.access_token).then(() => {
+            setUser(data.user);
+            router.replace("/home");
+          });
+        }
+      })
+      .catch((error) => {
+        setSubmitting(false);
+        alert(`An error occurred. Please try again. ${error.toString()}`);
+      });
   };
   return (
     <View style={{ padding: 16 }}>
@@ -70,9 +78,10 @@ export default function SignupForm() {
         onChangeText={setConfirm}
       ></ThemedInput>
       <ThemedButton
+        disabled={submitting || !username || !password || password !== confirm}
         isLoading={submitting}
         onPress={handleSubmit}
-        title="Submit"
+        title="SUBMIT"
       ></ThemedButton>
       <Pressable
         onPress={() => router.push("/login")}

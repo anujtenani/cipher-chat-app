@@ -10,7 +10,6 @@ import * as ImagePicker from "expo-image-picker";
 import { Stack } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, View } from "react-native";
-
 export default function ProfileSettings() {
   const user = useAuth((state) => state.user);
   const updateProfile = useAuth((state) => state.updateProfile);
@@ -123,7 +122,7 @@ export default function ProfileSettings() {
         ></ThemedInput>
       </View>
 
-      <View
+      {/* <View
         style={{
           borderBottomWidth: 1,
           padding: 12,
@@ -137,7 +136,7 @@ export default function ProfileSettings() {
           MEDIA
         </ThemedText>
         <ThemedText type="subtitle">42 photos and videos</ThemedText>
-      </View>
+      </View> */}
 
       <View style={{ marginTop: 20 }}></View>
       <ThemedButton title="Submit"></ThemedButton>

@@ -26,7 +26,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <SWRConfig
           value={{
             isOnline: () => networkState.isConnected ?? true,
@@ -60,6 +60,7 @@ export default function RootLayout() {
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
             <Stack.Screen
               name="modal"
               options={{ presentation: "modal", title: "Modal" }}

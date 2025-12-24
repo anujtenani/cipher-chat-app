@@ -2,8 +2,9 @@ import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/Avatar";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { apiGet } from "@/utils/api";
+import { apiGet, apiPost } from "@/utils/api";
 import { PublicUser } from "@/utils/api_types";
+import { calculateAge, formatDistance } from "@/utils/func";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
@@ -28,6 +29,7 @@ export default function PublicProfilePage() {
     `/users/user/${username}`,
     apiGet
   );
+  const user = data?.user;
 
   const borderColor = useThemeColor({}, "border");
   const cardColor = useThemeColor({}, "card");
@@ -35,25 +37,24 @@ export default function PublicProfilePage() {
   const primaryColor = useThemeColor({}, "primary");
   const iconColor = useThemeColor({}, "icon");
 
-  const user = data?.user;
-
-  const calculateAge = (dateOfBirth: string) => {
-    const birthDate = new Date(dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
+  const [starting, setStarting] = React.useState(false);
+  const handleStartChat = () => {
+    if (!user) return;
+    // Navigate to chat screen with user
+    setStarting(true);
+    apiPost<{ id: number }>("/conversations/start", {
+      username: user.username,
+    }).then((conversation) => {
+      setStarting(false);
+      router.push(`/chat/${conversation.id}`);
+      console.log("Start chat with:", user.username);
+    });
   };
 
-  const formatDistance = (km: number) => {
-    if (km < 1) return `${Math.round(km * 1000)}m away`;
-    return `${km.toFixed(1)}km away`;
+  const handleReport = () => {
+    if (!user) return;
+    // Handle report user
+    console.log("Report user:", user.username);
   };
 
   return (
@@ -115,7 +116,7 @@ export default function PublicProfilePage() {
                 darkColor={mutedColor}
                 style={styles.statusMessage}
               >
-                "{user.status_message}"
+                &apos;{user.status_message}&apos;
               </ThemedText>
             )}
           </View>

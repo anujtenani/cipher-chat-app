@@ -8,10 +8,12 @@ import {
 export default function ThemedButton({
   title,
   isLoading,
+  disabled,
   children,
   style,
   onPress,
 }: {
+  disabled?: boolean;
   isLoading?: boolean;
   style?: any;
   children?: React.ReactNode;
@@ -21,7 +23,7 @@ export default function ThemedButton({
   return (
     <TouchableHighlight
       onPress={onPress}
-      disabled={isLoading}
+      disabled={isLoading || disabled}
       style={[
         {
           opacity: isLoading ? 0.5 : 1,
