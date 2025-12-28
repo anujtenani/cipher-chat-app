@@ -23,7 +23,6 @@ function Initializer() {
   const welcomeSlidesCompleted = useLocalSettings(
     (state) => state.settings.welcomeSlidesCompleted
   );
-  console.log({ isAuthenticated, welcomeSlidesCompleted });
   if (isAuthenticated === "unknown") {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>

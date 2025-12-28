@@ -32,9 +32,11 @@ export default function HomeScreen() {
   const renderItem = ({ item }: { item: Conversation }) => {
     const otherParticipant = item.participants[0];
     const last_message = item.last_message;
-    const lastMessage = last_message?.data.attachments
-      ? "Attachment"
-      : last_message?.data.text || "No messages yet";
+    const lastMessage = last_message
+      ? last_message?.data.attachments
+        ? "Attachment"
+        : last_message?.data.text
+      : "No messages yet";
 
     return (
       <TouchableOpacity
@@ -52,7 +54,7 @@ export default function HomeScreen() {
           uri={otherParticipant?.profile_photo?.url}
           name={otherParticipant?.username}
           size={56}
-          lastSeenAt={new Date().toISOString()}
+          lastSeenAt={otherParticipant?.last_seen_at}
         />
 
         <View style={{ flex: 1 }}>
@@ -68,7 +70,9 @@ export default function HomeScreen() {
               {otherParticipant.username}
             </Text>
             <Text style={{ fontSize: 12, color: textColor, opacity: 0.6 }}>
-              {formatTimestamp(item.last_message_at)}
+              {item.last_message_at
+                ? formatTimestamp(item.last_message_at)
+                : ""}
             </Text>
           </View>
 

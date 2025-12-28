@@ -4,19 +4,32 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { ImagePickerAsset } from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
 
-export async function getThumbnailAsync(file: ImagePickerAsset) {
-  if (file.type?.startsWith("video")) {
-    const thumbnail = await getVideoThumbnail(file.uri);
+export async function getThumbnailAsync({
+  uri,
+  type,
+  width,
+  height,
+}: {
+  uri: string;
+  type?: ImagePickerAsset["type"];
+  width?: number;
+  height?: number;
+}) {
+  if (type?.startsWith("video")) {
+    const thumbnail = await getVideoThumbnail(uri);
     return {
-      ...thumbnail,
+      // ...thumbnail,
+      uri: thumbnail.uri,
+      width: thumbnail.width,
+      height: thumbnail.height,
       blurhash: await getBlurHash(thumbnail.uri),
     };
   } else {
     return {
-      blurhash: await getBlurHash(file.uri),
-      thumbnail: file.uri,
-      width: file.width,
-      height: file.height,
+      blurhash: await getBlurHash(uri),
+      uri: uri,
+      width,
+      height,
     };
   }
 }

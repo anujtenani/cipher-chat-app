@@ -35,6 +35,7 @@ export interface PublicUser {
 
 export interface AuthenticatedUser extends PublicUser {
   email: string;
+  visibility: number; // 1 = public, 0 = private
   id: number;
 }
 
@@ -48,11 +49,14 @@ export interface Conversation {
 
 export interface Message {
   id: number;
+  temp_id?: string;
+  conversation_id: number;
   sender: PublicUser;
   data: {
-    text: string;
+    text?: string;
     attachments?: {
-      url: string;
+      url?: string;
+      id: string;
       blurhash?: string;
       thumbnail?: string;
       type: "image" | "video";

@@ -1,12 +1,13 @@
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/Avatar";
+import ThemedButton from "@/components/ui/ThemedButton";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { apiGet, apiPost } from "@/utils/api";
-import { PublicUser } from "@/utils/api_types";
+import { MediaAsset, PublicUser } from "@/utils/api_types";
 import { calculateAge, formatDistance } from "@/utils/func";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { router, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -43,20 +44,23 @@ export default function PublicProfilePage() {
     if (!user) return;
     // Navigate to chat screen with user
     setStarting(true);
-    apiPost<{ id: number }>("/conversations/start", {
+    apiPost<{ conversation: { id: number } }>("/conversations/start", {
       username: user.username,
-    }).then((conversation) => {
-      setStarting(false);
-      router.push(`/chat/${conversation.id}`);
-      console.log("Start chat with:", user.username);
+    }).then(({ conversation }) => {
+      if (conversation.id) {
+        setStarting(false);
+        router.push(`/chat/${conversation.id}`);
+      } else {
+        alert("Could not start chat. Please try again later.");
+      }
     });
   };
 
-  const handleReport = () => {
-    if (!user) return;
-    // Handle report user
-    console.log("Report user:", user.username);
-  };
+  // const handleReport = () => {
+  //   if (!user) return;
+  //   // Handle report user
+  //   console.log("Report user:", user.username);
+  // };
   const age = calculateAge(user?.date_of_birth);
 
   return (
@@ -239,82 +243,119 @@ export default function PublicProfilePage() {
           )}
 
           {/* Media Gallery */}
-          {user.media && user.media.length > 0 && (
-            <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-              <ThemedText
-                type="defaultSemiBold"
-                style={{ fontSize: 18, marginBottom: 12 }}
-              >
-                Photos & Videos ({user.media.length})
-              </ThemedText>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                {user.media.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={{
-                      width: MEDIA_GRID_SIZE,
-                      height: MEDIA_GRID_SIZE,
-                      borderRadius: 8,
-                      overflow: "hidden",
-                      position: "relative",
-                    }}
-                    onPress={() => {
-                      // TODO: Open media viewer
-                    }}
-                  >
-                    <Image
-                      source={{ uri: item.thumbnail }}
-                      style={{ width: "100%", height: "100%" }}
-                      resizeMode="cover"
-                    />
-                    {item.type === "video" && (
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: "rgba(0, 0, 0, 0.3)",
-                        }}
-                      >
-                        <Ionicons name="play-circle" size={32} color="white" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
+          <UserGallery username={user.username} />
+          <ConversationGallery username={user.username} />
           <View style={{ height: 12 }} />
         </ScrollView>
       )}
-      <TouchableOpacity
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          marginHorizontal: 16,
-          marginTop: 24,
-          padding: 16,
-          borderRadius: 12,
-          gap: 8,
-          backgroundColor: primaryColor,
-        }}
+      <ThemedButton
+        isLoading={starting}
+        style={{ margin: 16 }}
         onPress={handleStartChat}
       >
         <Ionicons name="chatbubble-outline" size={20} color="white" />
         <ThemedText
-          type="defaultSemiBold"
-          style={{ fontSize: 16 }}
           lightColor="white"
           darkColor="white"
+          type="defaultSemiBold"
+          style={{ fontSize: 16 }}
         >
           Send Message
         </ThemedText>
-      </TouchableOpacity>
+      </ThemedButton>
     </ThemedView>
+  );
+}
+
+function RenderGalleryStrip({
+  media,
+  onItemPress,
+}: {
+  media: MediaAsset[];
+  onItemPress: (item: MediaAsset) => void;
+}) {
+  return (
+    <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+      <ThemedText
+        type="defaultSemiBold"
+        style={{ fontSize: 18, marginBottom: 12 }}
+      >
+        Photos & Videos ({media.length})
+      </ThemedText>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+        {media.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={{
+              width: MEDIA_GRID_SIZE,
+              height: MEDIA_GRID_SIZE,
+              borderRadius: 8,
+              overflow: "hidden",
+              position: "relative",
+            }}
+            onPress={() => {
+              onItemPress(item);
+            }}
+          >
+            <Image
+              source={{ uri: item.thumbnail }}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="cover"
+            />
+            {item.type === "video" && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0, 0, 0, 0.3)",
+                }}
+              >
+                <Ionicons name="play-circle" size={32} color="white" />
+              </View>
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function UserGallery({ username }: { username: string }) {
+  const { data, isLoading } = useSWR<{ media: MediaAsset[] }>(
+    `/media/gallery?username=${username || ""}&source=user_gallery`
+  );
+  const onItemPress = (item: MediaAsset) => {
+    router.push(
+      `/gallery?source=user_gallery&username=${username}&start_id=${item.id}`
+    );
+  };
+  if (data?.media?.length === 0) {
+    return null;
+  }
+  return (
+    <RenderGalleryStrip media={data?.media || []} onItemPress={onItemPress} />
+  );
+}
+function ConversationGallery({ username }: { username: string }) {
+  const { data, isLoading } = useSWR<{
+    media: MediaAsset[];
+    conversation_id: number;
+  }>(`/media/gallery?source=conversation&username=${username}`);
+  const router = useRouter();
+  const onItemPress = (item: MediaAsset) => {
+    router.push(
+      `/gallery?source=conversation&username=${username}&start_id=${item.id}`
+    );
+  };
+  if (data?.media?.length === 0) {
+    return null;
+  }
+  return (
+    <RenderGalleryStrip media={data?.media || []} onItemPress={onItemPress} />
   );
 }

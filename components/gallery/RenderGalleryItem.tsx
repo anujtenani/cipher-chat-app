@@ -59,7 +59,8 @@ const RenderGalleryItem: React.FC<RenderGalleryItemProps> = ({
           width: "100%",
           aspectRatio: item.width / item.height,
         }}
-        resizeMode="cover"
+        contentFit={"cover"}
+        contentPosition={"center"}
       />
 
       {item.type === "video" && (

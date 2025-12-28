@@ -74,7 +74,6 @@ export function MessageAttachmentMedia({
   timestamp: string;
 }) {
   if (!attachments || attachments.length === 0) return null;
-  console.log("Rendering attachments:", attachments);
   return (
     <View
       style={{
@@ -161,7 +160,7 @@ export function MessageBubble({
       {hasText && (
         <MessageText
           side={side}
-          text={message.data.text}
+          text={message.data.text || ""}
           timestamp={message.created_at}
         />
       )}

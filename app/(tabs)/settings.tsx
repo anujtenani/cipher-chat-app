@@ -2,6 +2,7 @@ import SettingsListItem from "@/components/settings/SettingsListItem";
 import SettingsSectionTitle from "@/components/settings/SettingsSectionTitle";
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/Avatar";
+import ThemedSwitch from "@/components/ui/ThemedSwitch";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +36,7 @@ export default function Settings() {
       <ThemedView style={{ flex: 1 }}>
         <Stack.Screen options={{ title: "Settings" }} />
         <ProfileCard></ProfileCard>
+        <ProfileVisibility></ProfileVisibility>
         <SettingsSectionTitle title="Preferences"></SettingsSectionTitle>
         <SettingsListItem
           title="Lock Setup"
@@ -72,6 +74,23 @@ export default function Settings() {
         </View>
       </ThemedView>
     </ScrollView>
+  );
+}
+
+function ProfileVisibility() {
+  const isVisible = useAuth((state) => state.user?.visibility === 1);
+  const updateProfile = useAuth((state) => state.updateProfile);
+  const toggle = () => {
+    updateProfile({ visibility: isVisible ? 0 : 1 });
+  };
+  return (
+    <SettingsListItem
+      title="Profile Visibility"
+      description="Allow others to discover your profile"
+      onPress={toggle}
+    >
+      <ThemedSwitch value={isVisible} onValueChange={toggle} />
+    </SettingsListItem>
   );
 }
 

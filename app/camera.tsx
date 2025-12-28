@@ -1,29 +1,30 @@
+import { useAttachmentSender } from "@/components/chat/useAttachmentSender";
+import { randomString } from "@/utils/func";
+import { getThumbnailAsync } from "@/utils/thumbnail_utils";
 import { Ionicons } from "@expo/vector-icons";
 import {
   CameraType,
   CameraView,
   FlashMode,
   useCameraPermissions,
+  useMicrophonePermissions,
 } from "expo-camera";
-import { router } from "expo-router";
+import * as FileSystem from "expo-file-system";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 type CameraMode = "photo" | "video";
 
 export default function CameraScreen() {
+  const { conversationId } = useLocalSearchParams<{
+    conversationId?: string;
+  }>();
   const [facing, setFacing] = useState<CameraType>("back");
   const [flash, setFlash] = useState<FlashMode>("off");
   const [mode, setMode] = useState<CameraMode>("photo");
@@ -31,8 +32,11 @@ export default function CameraScreen() {
   const [recordingTime, setRecordingTime] = useState(0);
   const [zoom] = useState(0);
   const [permission, requestPermission] = useCameraPermissions();
+  const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const cameraRef = useRef<CameraView>(null);
   const recordingTimerRef = useRef<number | null>(null);
+  const addFileToSendingQueue = useAttachmentSender((state) => state.addFile);
+  const insets = useSafeAreaInsets();
 
   // Animation values - must be called before any conditional returns
   const shutterScale = useSharedValue(1);
@@ -106,16 +110,28 @@ export default function CameraScreen() {
 
     try {
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 1,
+        quality: 0.7,
         skipProcessing: false,
       });
+      router.back();
 
       if (photo) {
+        const fileInfo = new FileSystem.File(photo.uri).info();
         // TODO: Handle photo for chat - pass to callback or navigate with photo.uri
         console.log("Photo taken:", photo.uri);
-        // For now, navigate back with the photo URI
-        // You can modify this to pass the URI to a callback or use router params
-        router.back();
+        addFileToSendingQueue({
+          ...photo,
+          type: "image",
+          metadata: {
+            thumbnail: photo.uri,
+            width: photo.width,
+            height: photo.height,
+            size: fileInfo.size,
+            blurhash: undefined,
+          },
+          id: randomString(),
+          conversationId: conversationId ? parseInt(conversationId) : 0,
+        });
       }
     } catch (error) {
       console.error("Error taking picture:", error);
@@ -126,17 +142,52 @@ export default function CameraScreen() {
   const startRecording = async () => {
     if (!cameraRef.current || isRecording) return;
 
+    // Request microphone permission if not granted
+    if (!micPermission?.granted) {
+      const result = await requestMicPermission();
+      if (!result.granted) {
+        Alert.alert(
+          "Microphone Permission Required",
+          "Please grant microphone access to record videos with audio."
+        );
+        return;
+      }
+    }
+
     try {
       setIsRecording(true);
       const video = await cameraRef.current.recordAsync({
-        maxDuration: 60,
+        maxDuration: 120,
       });
 
       if (video) {
         // TODO: Handle video for chat - pass to callback or navigate with video.uri
         console.log("Video recorded:", video.uri);
-        // For now, navigate back with the video URI
-        // You can modify this to pass the URI to a callback or use router params
+        const thumbnail = await getThumbnailAsync({
+          uri: video.uri,
+          type: "video",
+          width: 0,
+          height: 0,
+        });
+        let fileInfo = new FileSystem.File(video.uri).info();
+
+        console.log("Thumbnail generated:", thumbnail);
+
+        addFileToSendingQueue({
+          ...video,
+          type: "video",
+          width: thumbnail.width || 0,
+          height: thumbnail.height || 0,
+          metadata: {
+            thumbnail: thumbnail.uri,
+            width: thumbnail.width || 0,
+            height: thumbnail.height || 0,
+            size: fileInfo.size,
+            blurhash: thumbnail.blurhash,
+          },
+          id: randomString(),
+          conversationId: conversationId ? parseInt(conversationId) : 0,
+        });
         router.back();
       }
     } catch (error) {
@@ -170,7 +221,7 @@ export default function CameraScreen() {
       />
 
       {/* Top Controls */}
-      <View style={styles.topControls}>
+      <View style={[styles.topControls, { top: insets.top + 20 }]}>
         <TouchableOpacity
           style={styles.topButton}
           onPress={() => router.back()}
@@ -187,7 +238,7 @@ export default function CameraScreen() {
 
       {/* Recording Timer */}
       {isRecording && (
-        <View style={styles.recordingTimer}>
+        <View style={[styles.recordingTimer, { top: insets.top + 20 }]}>
           <View style={styles.recordingDot} />
           <Text style={styles.recordingText}>{formatTime(recordingTime)}</Text>
         </View>
@@ -201,7 +252,9 @@ export default function CameraScreen() {
       )}
 
       {/* Bottom Controls */}
-      <View style={styles.bottomControls}>
+      <View
+        style={[styles.bottomControls, { paddingBottom: insets.bottom + 20 }]}
+      >
         <View style={styles.controlsRow}>
           {/* Spacer */}
           <View style={styles.spacer} />
@@ -320,7 +373,6 @@ const styles = StyleSheet.create({
   },
   topControls: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 60 : 40,
     left: 20,
     right: 20,
     flexDirection: "row",
@@ -342,7 +394,6 @@ const styles = StyleSheet.create({
   },
   recordingTimer: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 60 : 40,
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
@@ -383,7 +434,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingBottom: Platform.OS === "ios" ? 40 : 20,
     paddingHorizontal: 20,
   },
   controlsRow: {

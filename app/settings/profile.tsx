@@ -38,19 +38,20 @@ export default function ProfileSettings() {
             setProgress(progress);
           }
         );
-        updateProfile({ profile_photo: uploadResult });
+        updateProfile({
+          profile_photo: {
+            ...uploadResult,
+            thumbnail: `${uploadResult.url}?height=300`,
+            width: selectedAsset.width,
+            height: selectedAsset.height,
+          },
+        });
       }
     } catch (error) {
       console.error("Error picking image:", error);
     }
   };
-  const [formData, setFormData] = React.useState({});
-  const handleChange = (field: string) => (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+
   const backgroundColor = useThemeColor({}, "background");
   return (
     <ScrollView style={{ flex: 1, paddingVertical: 16, backgroundColor }}>
@@ -99,7 +100,7 @@ export default function ProfileSettings() {
           DATE OF BIRTH
         </ThemedText>
         <ThemedDatePicker
-          value={user?.date_of_birth}
+          value={new Date(user?.date_of_birth || "")}
           onChange={(d) => updateProfile({ date_of_birth: d.toString() })}
         />
       </View>
@@ -131,6 +132,15 @@ export default function ProfileSettings() {
         description={user?.bio || "You haven't set a bio yet. Tap to update."}
         onPress={() => {
           router.push("/profile_wizard/update_bio");
+        }}
+      />
+      <ProfileItem
+        title="LOCATION"
+        description={
+          user?.location || "You haven't set a location yet. Tap to update."
+        }
+        onPress={() => {
+          router.push("/profile_wizard/update_location");
         }}
       />
     </ScrollView>

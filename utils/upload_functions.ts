@@ -9,6 +9,10 @@ export interface UploadedImageAsset {
   mimetype?: string;
   name: string;
   type: "image";
+  width: number;
+  height: number;
+  size: number;
+  // key: string;
   id: string;
 }
 export interface UploadedVideoAsset {
@@ -84,6 +88,7 @@ export async function uploadImageFile(
       signal: abortController?.signal,
       onUploadProgress: progressCallback
         ? (event) => {
+            console.log("upload progress", event.loaded, event.total);
             if (event.total) {
               progressCallback(event.loaded, event.total);
             }
@@ -102,6 +107,9 @@ export async function uploadImageFile(
     mimetype: file.mimeType,
     name: filename,
     type: "image",
+    width: file.width,
+    height: file.height,
+    size: file.fileSize || 0,
   };
 }
 

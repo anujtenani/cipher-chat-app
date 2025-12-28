@@ -49,7 +49,7 @@ export default function NotificationSettings() {
     mutate(
       apiPost("/auth/push/register", {
         token: deviceToken,
-        type: tokenType,
+        service: tokenType,
         settings: {
           ...notificationSettings,
           [key]: value,

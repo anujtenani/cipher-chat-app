@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
 
-const baseURL = `http://192.168.68.54:3010`;
+const baseURL = `http://192.168.68.57:3010`;
 let accessToken: string | null = null;
 export const getAcessToken = async () => {
   if (accessToken) return accessToken;
@@ -83,7 +83,15 @@ export function sendTypingIndicator(conversationId: number, isTyping: boolean) {
   socket.emit("typing", { conversationId, isTyping });
 }
 
-export function getUserInfo() {
+export function getUserInfo(): Promise<{
+  latitude: number;
+  longitude: number;
+  postalCode: string;
+  country: string;
+  region: string;
+  city: string;
+  timezone: string;
+}> {
   return fetch("https://user-info.goaff.pro")
     .then((res) => res.json())
     .catch((e) => {

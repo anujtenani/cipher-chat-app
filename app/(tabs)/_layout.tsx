@@ -6,13 +6,21 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
-import { socket } from "@/utils/api";
+import { apiPost, getUserInfo, socket } from "@/utils/api";
 
+function updateLocation() {
+  return getUserInfo().then((user) => {
+    return apiPost("/auth/update-location", user);
+  });
+}
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const id = useAuth((state) => state.user?.id);
   useEffect(() => {
     if (!id) return;
+    updateLocation().catch((e) => {
+      console.log(e);
+    });
     socket.connect();
     socket.on(`typing:start`, ({ conversationId, userId }) => {
       // console.log("User started typing:", data);
