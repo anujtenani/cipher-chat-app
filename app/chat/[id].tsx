@@ -55,7 +55,7 @@ export default function ChatPanel() {
       senderId: number;
       messageId: number;
     }) => {
-    if (Number(id) !== conversationId) return;
+      if (Number(id) !== conversationId) return;
       mutate();
     };
     socket.on(`message:new`, listener);
@@ -68,6 +68,23 @@ export default function ChatPanel() {
   useEffect(() => {
     apiPost("/messages/read", { conversationId: Number(id) });
   }, [id]);
+  // const [galleryVisible, setGalleryVisible] = useState(false);
+  // const media = msgs
+  //   .filter((m) => m.data.attachments && m.data.attachments.length > 0)
+  //   .flatMap((m) =>
+  //     m.data.attachments!.map((att) => ({
+  //       ...att,
+  //       type: "image" as const,
+  //       uri: att.url || att.thumbnail!,
+  //       messageId: m.id,
+  //     }))
+  //   )
+  //   .filter((att) => isValidUrl(att.uri));
+  // console.log(
+  //   msgs
+  //     .filter((m) => m.data.attachments && m.data.attachments.length > 0)
+  //     .flatMap((m) => m.data.attachments)
+  // );
   const otherUser = conversation?.conversation?.participants?.[0];
   const router = useRouter();
   // const msgs = messages?.messages || [];
@@ -97,6 +114,13 @@ export default function ChatPanel() {
           ),
         }}
       />
+
+      {/* <MediaGallery
+        media={media}
+        initialIndex={0}
+        visible={galleryVisible}
+        onClose={() => setGalleryVisible(false)}
+      /> */}
       <FlatList
         data={msgs}
         refreshing={isLoading}
@@ -117,12 +141,17 @@ export default function ChatPanel() {
             onLongPress={() => {
               toggleBottomSheet();
             }}
-            onPress={() => {
-              router.push(
-                `/gallery?source=conversation&username=${otherUser?.username}&start_id=${item.id}`
-              );
-              console.log("item pressed");
-            }}
+            onPress={
+              item.data?.attachments && item.data.attachments.length > 0
+                ? () => {
+                    // setGalleryVisible(true);
+                    router.push(
+                      `/gallery?source=conversation&username=${otherUser?.username}&start_id=${item.id}`
+                    );
+                    console.log("item pressed");
+                  }
+                : undefined
+            }
           >
             {/* <ThemedText>Item</ThemedText> */}
             <MessageBubble

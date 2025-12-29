@@ -11,8 +11,10 @@ import { router, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
+  Linking,
   ScrollView,
   TouchableOpacity,
   View,
@@ -56,11 +58,23 @@ export default function PublicProfilePage() {
     });
   };
 
-  // const handleReport = () => {
-  //   if (!user) return;
-  //   // Handle report user
-  //   console.log("Report user:", user.username);
-  // };
+  const handleReport = async () => {
+    if (!user) return;
+    const email = "support@goaffpro.com";
+    const subject = `Cipher Chat [ Report: ${user.username} ]`;
+
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+    const canOpen = await Linking.canOpenURL(mailtoUrl);
+    if (canOpen) {
+      await Linking.openURL(mailtoUrl).catch((error) => {
+        Alert.alert("Error", "Could not open email client");
+      });
+    } else {
+      Alert.alert("Error", "Could not open email client");
+    }
+
+    // Handle report user
+  };
   const age = calculateAge(user?.date_of_birth);
 
   return (
@@ -76,15 +90,11 @@ export default function PublicProfilePage() {
         options={{
           title: (username as string) || "Profile",
           headerBackButtonDisplayMode: "minimal",
-          // headerRight: () => (
-          //   <TouchableOpacity style={{ marginRight: 8 }}>
-          //     <Ionicons
-          //       name="ellipsis-horizontal"
-          //       size={24}
-          //       color={iconColor}
-          //     />
-          //   </TouchableOpacity>
-          // ),
+          headerRight: () => (
+            <TouchableOpacity onPress={handleReport} style={{ marginRight: 8 }}>
+              <Ionicons name="flag-outline" size={24} color={iconColor} />
+            </TouchableOpacity>
+          ),
         }}
       />
 

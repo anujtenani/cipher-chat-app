@@ -20,7 +20,7 @@ export type FileAttachment = ImagePickerAsset & {
 export interface AttachmentSenderState {
   files: FileAttachment[];
   fileQueue: FileAttachment[];
-  isProcessing: boolean;
+  isProcessing: string | false;
   progressTracker: { [fileId: string]: number };
   addFile: (file: FileAttachment) => void;
   removeFile: (fileId: string) => void;
@@ -43,8 +43,11 @@ export const useAttachmentSender = create<AttachmentSenderState>((set, get) => {
       get().processQueue();
     },
     removeFile: (fileId: string) => {
+      console.log("removing file", fileId);
       set({
         cancelledUploads: [...get().cancelledUploads, fileId],
+        isProcessing:
+          fileId === get().isProcessing ? false : get().isProcessing,
         files: get().files.filter((f) => f.id !== fileId),
         fileQueue: get().fileQueue.filter((f) => f.id !== fileId),
       });
@@ -54,9 +57,8 @@ export const useAttachmentSender = create<AttachmentSenderState>((set, get) => {
       if (isProcessing) return;
       if (fileQueue.length > 0) {
         const toProcess = fileQueue.pop();
-
-        set({ fileQueue: fileQueue, isProcessing: true });
         if (toProcess) {
+          set({ fileQueue: fileQueue, isProcessing: toProcess.id });
           try {
             // Upload logic here
             const [thumbnailResult, uploadResult] = await Promise.all([

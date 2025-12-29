@@ -25,7 +25,6 @@ const Gallery = () => {
     if (!album?.media) return;
 
     const initialIndex = album.media.findIndex((item) => item.id == start_id);
-    console.log("initial index", initialIndex, album.media);
     if (initialIndex !== -1) {
       if (ref?.current) {
         ref.current?.setIndex(initialIndex);
@@ -75,7 +74,7 @@ const Gallery = () => {
           headerShadowVisible: false,
         }}
       />
-      <View style={{ flex: 1, backgroundColor: "#000" }}>
+      <View style={{ flex: 1 }}>
         <AwesomeGallery
           ref={ref}
           loop
@@ -86,7 +85,10 @@ const Gallery = () => {
           onSwipeToClose={back}
           renderItem={({ item, setImageDimensions }) => (
             <RenderGalleryItem
-              setImageDimensions={setImageDimensions}
+              setImageDimensions={(dimensions) => {
+                console.log("setting ", dimensions);
+                setImageDimensions(dimensions);
+              }}
               item={item}
             />
           )}

@@ -1,7 +1,110 @@
 import { Message } from "@/utils/api_types";
 import { formatTimestamp } from "@/utils/func";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
+
+function formatDuration(seconds?: number): string {
+  if (!seconds) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+function RenderAttachment({
+  attachment,
+  index,
+  totalAttachments,
+}: {
+  attachment: NonNullable<Message["data"]["attachments"]>[number];
+  index: number;
+  totalAttachments: number;
+}) {
+  const isVideo = attachment.type === "video";
+  console.log({ attachment });
+  return (
+    <View
+      style={{
+        position: "relative",
+        marginBottom: index < totalAttachments - 1 ? 6 : 0,
+      }}
+    >
+      <Image
+        key={String(index)}
+        source={{
+          uri: attachment.thumbnail,
+          blurhash: attachment.blurhash,
+        }}
+        style={{
+          width: 240,
+          height: 240,
+          borderRadius: 16,
+        }}
+        contentFit="cover"
+        contentPosition="center"
+      />
+      {isVideo && (
+        <>
+          {/* Play button overlay */}
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons
+                name="play"
+                size={28}
+                color="#FFFFFF"
+                style={{ marginLeft: 3 }}
+              />
+            </View>
+          </View>
+          {/* Duration badge */}
+          {attachment.duration !== undefined && (
+            <View
+              style={{
+                position: "absolute",
+                bottom: 8,
+                right: 8,
+                backgroundColor: "rgba(0, 0, 0, 0.7)",
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 6,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 12,
+                  fontWeight: "600",
+                }}
+              >
+                {formatDuration(attachment.duration)}
+              </Text>
+            </View>
+          )}
+        </>
+      )}
+    </View>
+  );
+}
+
 export function MessageText({
   side,
   text,
@@ -102,20 +205,11 @@ export function MessageAttachmentMedia({
           }}
         >
           {attachments.map((attachment, index) => (
-            <Image
+            <RenderAttachment
               key={String(index)}
-              source={{
-                uri: attachment.thumbnail,
-                blurhash: attachment.blurhash,
-              }}
-              style={{
-                width: 240,
-                height: 240,
-                borderRadius: 16,
-                marginBottom: index < attachments.length - 1 ? 6 : 0,
-              }}
-              contentFit="fill"
-              contentPosition={"center"}
+              attachment={attachment}
+              index={index}
+              totalAttachments={attachments.length}
             />
           ))}
         </View>

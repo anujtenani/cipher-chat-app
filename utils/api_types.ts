@@ -60,6 +60,7 @@ export interface Message {
       blurhash?: string;
       thumbnail?: string;
       type: "image" | "video";
+      duration?: number;
     }[];
   };
   created_at: string;

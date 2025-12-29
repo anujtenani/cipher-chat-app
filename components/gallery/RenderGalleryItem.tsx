@@ -32,6 +32,8 @@ const RenderGalleryItem: React.FC<RenderGalleryItemProps> = ({
   const imageSource = {
     uri: item.type === "video" ? item.thumbnail : item.url || item.thumbnail,
   };
+  console.log({ imageSource });
+
   const [shouldPlay, setShouldPlay] = useState(false);
   if (shouldPlay && item.type === "video") {
     return <RenderVideoItem item={item} />;
@@ -156,7 +158,7 @@ function RenderVideoItem({ item }: { item: MediaAsset & { type: "video" } }) {
       <VideoView
         player={player}
         allowsFullscreen
-        // allowsPictureInPicture
+        allowsPictureInPicture
         style={{
           width: "100%",
           height: "100%",
