@@ -2,8 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
 
 const baseURL =
-  // `https://cipher-chat-api.hideitpro.com`;
-  `http://192.168.68.57:3010`;
+  //`https://cipher-chat-api.hideitpro.com`;
+  `http://192.168.68.52:3010`;
 let accessToken: string | null = null;
 export const getAcessToken = async () => {
   if (accessToken) return accessToken;
@@ -27,11 +27,11 @@ const defaultHeaders = async () => {
   };
 };
 
-export async function apiPost<T>(url: string, body: any): Promise<T> {
+export async function apiPost<T>(url: string, body?: any): Promise<T> {
   return fetch(baseURL + url, {
     method: "POST",
     headers: await defaultHeaders(),
-    body: JSON.stringify(body),
+    body: body ? JSON.stringify(body) : undefined,
   })
     .then((res) => res.json())
     .then((data) => {

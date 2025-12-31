@@ -42,9 +42,18 @@ export interface AuthenticatedUser extends PublicUser {
 export interface Conversation {
   id: number;
   unread_count: number;
-  participants: (PublicUser & { id: number })[];
+  participants: (PublicUser & {
+    id: number;
+    left_at?: number;
+    joined_at?: number;
+    last_read_message_id?: number;
+  })[];
   last_message_at: string;
   last_message: Message;
+  left_at: string | null;
+  muted_at: string | null;
+  archived_at: string | null;
+  joined_at: string | null;
 }
 
 export interface Message {

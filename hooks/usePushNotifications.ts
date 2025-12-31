@@ -23,8 +23,9 @@ export async function registerForNativePushToken() {
 
   // 👇 THIS is the native token
   const token = await Notifications.getDevicePushTokenAsync();
+  console.log({ token });
   apiPost("/auth/push/register", {
-    service: token.type === "fcm" ? "fcm" : "apns",
+    service: Platform.OS === "ios" ? "apns" : "fcm",
     token: token.data,
   });
 

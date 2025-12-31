@@ -6,6 +6,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
+import { useTyping } from "@/hooks/useTyping";
 import { apiPost, getUserInfo, socket } from "@/utils/api";
 
 function updateLocation() {
@@ -16,6 +17,8 @@ function updateLocation() {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const id = useAuth((state) => state.user?.id);
+  const addTyping = useTyping((state) => state.addTypingUser);
+  const removeTyping = useTyping((state) => state.removeTypingUser);
   useEffect(() => {
     if (!id) return;
     updateLocation().catch((e) => {
@@ -23,12 +26,17 @@ export default function TabLayout() {
     });
     socket.connect();
     socket.on(`typing:start`, ({ conversationId, userId }) => {
+      addTyping(conversationId);
       // console.log("User started typing:", data);
+    });
+    socket.on(`typing:stop`, ({ conversationId, userId }) => {
+      removeTyping(conversationId);
+      // console.log("User stopped typing:", data);
     });
     return () => {
       socket.disconnect();
     };
-  }, [id]);
+  }, [addTyping, id, removeTyping]);
   return (
     <Tabs
       screenOptions={{

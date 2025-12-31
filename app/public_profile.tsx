@@ -223,7 +223,7 @@ export default function PublicProfilePage() {
                   lightColor={mutedColor}
                   darkColor={mutedColor}
                 >
-                  {user.gender} • {user.country}
+                  {user.gender?.toUpperCase()} • {user.country}
                 </ThemedText>
               </View>
             </View>

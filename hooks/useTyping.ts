@@ -4,7 +4,7 @@ import { useCallback, useRef } from "react";
 
 interface TypingState {
   typingUsers: Set<number>;
-  addTypingUser: (userId: number, startAt: number) => void;
+  addTypingUser: (userId: number) => void;
   removeTypingUser: (userId: number) => void;
 }
 

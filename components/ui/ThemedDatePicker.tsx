@@ -7,7 +7,7 @@ import { Modal, Platform, Text, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 
 interface ThemedDatePickerProps {
-  value: Date;
+  value?: Date;
   onChange: (date: Date) => void;
   placeholder?: string;
   style?: any;

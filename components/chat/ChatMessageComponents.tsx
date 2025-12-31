@@ -13,10 +13,12 @@ function formatDuration(seconds?: number): string {
 
 function RenderAttachment({
   attachment,
+  canShowMedia,
   index,
   totalAttachments,
 }: {
   attachment: NonNullable<Message["data"]["attachments"]>[number];
+  canShowMedia: boolean;
   index: number;
   totalAttachments: number;
 }) {
@@ -170,9 +172,11 @@ export function MessageText({
 export function MessageAttachmentMedia({
   side,
   attachments,
+  canShowMedia,
   timestamp,
 }: {
   side: "left" | "right";
+  canShowMedia: boolean;
   attachments: Message["data"]["attachments"];
   timestamp: string;
 }) {
@@ -206,6 +210,7 @@ export function MessageAttachmentMedia({
         >
           {attachments.map((attachment, index) => (
             <RenderAttachment
+              canShowMedia={canShowMedia}
               key={String(index)}
               attachment={attachment}
               index={index}
@@ -233,9 +238,11 @@ export function MessageAttachmentMedia({
 export function MessageBubble({
   message,
   isCurrentUser,
+  canShowMedia,
 }: {
   message: Message;
   isCurrentUser: boolean;
+  canShowMedia: boolean;
 }) {
   const side = isCurrentUser ? "right" : "left";
   const hasAttachments =
@@ -247,6 +254,7 @@ export function MessageBubble({
       {hasAttachments && (
         <MessageAttachmentMedia
           side={side}
+          canShowMedia={canShowMedia}
           attachments={message.data.attachments}
           timestamp={message.created_at}
         />

@@ -8,17 +8,22 @@ import { useTyping } from "@/hooks/useTyping";
 import { apiGet, socket } from "@/utils/api";
 import { Conversation } from "@/utils/api_types";
 import { formatTimestamp } from "@/utils/func";
-import { Stack, useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { Button, FlatList, Text, TouchableOpacity, View } from "react-native";
 import useSWR from "swr";
 
+type FilterType = "active" | "favorites" | "archived" | "blocked";
+
 export default function HomeScreen() {
   const router = useRouter();
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>("active");
+
   const { data, mutate, isLoading } = useSWR<{ conversations: Conversation[] }>(
-    "/conversations",
+    `/conversations?status=${selectedFilter}`,
     apiGet
   );
+
   useEffect(() => {
     socket.on("message:new", (data: any) => {
       // Handle incoming message
@@ -26,6 +31,11 @@ export default function HomeScreen() {
       // console.log("New message received:", data);
     });
   }, [mutate]);
+
+  useFocusEffect(() => {
+    mutate();
+  });
+
   const conversations = data?.conversations || [];
   const borderColor = useThemeColor({}, "border");
   const textColor = useThemeColor({}, "text");
@@ -138,16 +148,51 @@ export default function HomeScreen() {
           ),
         }}
       />
-      <FlatList
-        refreshing={isLoading}
-        onRefresh={() => mutate()}
-        data={conversations}
-        ListEmptyComponent={isLoading ? null : ListEmptyComponent}
-        ListHeaderComponent={ShowPushNotificationPrompt}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        style={{ flex: 1 }}
-      />
+      <View style={{ flex: 1 }}>
+        {/* Filter Pills */}
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderBottomWidth: 1,
+            flexDirection: "row",
+            gap: 8,
+            borderBottomColor: borderColor,
+          }}
+        >
+          <FilterPill
+            label="Active"
+            isSelected={selectedFilter === "active"}
+            onPress={() => setSelectedFilter("active")}
+          />
+          {/* <FilterPill
+            label="Favorites"
+            isSelected={selectedFilter === "favorites"}
+            onPress={() => setSelectedFilter("favorites")}
+          /> */}
+          <FilterPill
+            label="Archived"
+            isSelected={selectedFilter === "archived"}
+            onPress={() => setSelectedFilter("archived")}
+          />
+          <FilterPill
+            label="Blocked"
+            isSelected={selectedFilter === "blocked"}
+            onPress={() => setSelectedFilter("blocked")}
+          />
+        </View>
+
+        <FlatList
+          refreshing={isLoading}
+          onRefresh={() => mutate()}
+          data={conversations}
+          ListEmptyComponent={isLoading ? null : ListEmptyComponent}
+          // ListHeaderComponent={ShowPushNotificationPrompt}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          style={{ flex: 1 }}
+        />
+      </View>
     </React.Fragment>
   );
 }
@@ -158,6 +203,7 @@ function IsTypingInConversation({
   conversationId: number;
 }) {
   const typingUsers = useTyping((state) => state.typingUsers);
+  console.log({ typingUsers });
   if (typingUsers.has(conversationId)) {
     return <TypingIndicator />;
   }
@@ -226,4 +272,40 @@ function ShowPushNotificationPrompt() {
     );
   }
   return null;
+}
+
+function FilterPill({
+  label,
+  isSelected,
+  onPress,
+}: {
+  label: string;
+  isSelected: boolean;
+  onPress: () => void;
+}) {
+  const textColor = useThemeColor({}, "text");
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: isSelected ? "#3B82F6" : "#F3F4F6",
+        borderWidth: isSelected ? 0 : 1,
+        borderColor: "#E5E7EB",
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 14,
+          fontWeight: isSelected ? "600" : "500",
+          color: isSelected ? "white" : textColor,
+        }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
 }

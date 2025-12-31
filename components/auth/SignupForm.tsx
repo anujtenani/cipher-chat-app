@@ -9,7 +9,6 @@ import ThemedInput from "../ui/ThemedInput";
 export default function SignupForm() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [confirm, setConfirm] = React.useState("");
   const setUser = useAuth((state) => state.setUser);
   const [submitting, setSubmitting] = React.useState(false);
 
@@ -70,15 +69,9 @@ export default function SignupForm() {
         placeholder="Enter password"
         onChangeText={setPassword}
       ></ThemedInput>
-      <ThemedInput
-        style={{ marginBottom: 12 }}
-        value={confirm}
-        secureTextEntry
-        placeholder="Confirm password"
-        onChangeText={setConfirm}
-      ></ThemedInput>
+
       <ThemedButton
-        disabled={submitting || !username || !password || password !== confirm}
+        disabled={submitting || !username || !password}
         isLoading={submitting}
         onPress={handleSubmit}
         title="SUBMIT"

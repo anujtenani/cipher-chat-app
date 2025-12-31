@@ -29,9 +29,11 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
   const handleTyping = useTypingEvents({
     delay: 700,
     onStart: () => {
+      console.log("emitted typing:start for conversation", conversationId);
       socket.emit("typing:start", { conversationId });
     },
     onStop: () => {
+      console.log("emitted typing:stop for conversation", conversationId);
       socket.emit("typing:stop", { conversationId });
     },
   });

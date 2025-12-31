@@ -49,7 +49,7 @@ export const useMessages = create<MessageStore>((set, get) => ({
       `/conversations/${conversationId}/messages?before_id=${beforeMessageId}`
     );
     const existingMessages = get().data[conversationId] || [];
-    const newMessages = response.messages;
+    const newMessages = response.messages || [];
     set({
       data: {
         ...get().data,

@@ -155,6 +155,7 @@ export default function ChatPanel() {
           >
             {/* <ThemedText>Item</ThemedText> */}
             <MessageBubble
+              canShowMedia={conversation?.conversation?.joined_at !== null}
               message={item}
               isCurrentUser={item.sender.username === user?.username}
             />
@@ -168,6 +169,30 @@ export default function ChatPanel() {
         }}
         style={{ flex: 1 }}
       />
+      {conversation?.conversation?.joined_at === null ? (
+        <AcceptRejectChatRequestPanel
+          senderUsername={otherUser?.username}
+          onAccept={mutateConversation}
+          onReject={() => {
+            router.back();
+          }}
+          conversationId={Number(id)}
+        ></AcceptRejectChatRequestPanel>
+      ) : null}
+      <OtherUserLeftChatBanner
+        otherUser={otherUser}
+        conversation={conversation?.conversation}
+        onUpdate={mutateConversation}
+      />
+      {conversation?.conversation?.muted_at !== null ? (
+        <ChatArchived
+          id={Number(id)}
+          onUpdate={async () => {
+            await mutateConversation();
+          }}
+        ></ChatArchived>
+      ) : null}
+
       <ChatInput conversationId={Number(id)} />
       <BottomModal visible={bottomSheet} onClose={toggleBottomSheet}>
         <ThemedView
@@ -284,5 +309,286 @@ function HeaderTitle({
         ) : null}
       </ThemedView>
     </>
+  );
+}
+
+function OtherUserLeftChatBanner({
+  otherUser,
+  conversation,
+  onUpdate,
+}: {
+  otherUser?: Conversation["participants"][0];
+  conversation?: Conversation;
+  onUpdate?: () => void;
+}) {
+  const [isArchiving, setIsArchiving] = useState(false);
+  const router = useRouter();
+  if (otherUser?.left_at === null) return null;
+
+  const isArchived = conversation?.muted_at !== null;
+
+  const handleArchiveToggle = async () => {
+    if (!conversation) return;
+
+    setIsArchiving(true);
+    try {
+      await apiPost(`/conversations/${conversation.id}/status`, {
+        archived: !isArchived,
+      });
+      router.back();
+      onUpdate?.();
+    } catch (error) {
+      console.error("Failed to toggle archive:", error);
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
+  return (
+    <ThemedView
+      style={{
+        padding: 12,
+        backgroundColor: "#FEE2E2",
+        borderTopWidth: 1,
+        borderTopColor: "#FCA5A5",
+      }}
+    >
+      <ThemedView style={{ backgroundColor: "transparent" }}>
+        <ThemedText
+          style={{
+            textAlign: "center",
+            color: "#B91C1C",
+            marginBottom: 8,
+          }}
+        >
+          {otherUser
+            ? `${otherUser.username} has left the chat. They will no longer receive messages you send.`
+            : "The other user has left the chat."}
+        </ThemedText>
+
+        <ScaleInPressable
+          onPress={handleArchiveToggle}
+          disabled={isArchiving}
+          style={{
+            // backgroundColor: isArchived ? "#10B981" : "#6B7280",
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderRadius: 6,
+            alignSelf: "center",
+            opacity: isArchiving ? 0.5 : 1,
+          }}
+        >
+          <ThemedText
+            style={{
+              color: "black",
+              fontSize: 14,
+              fontWeight: "600",
+              textAlign: "center",
+            }}
+          >
+            {isArchiving
+              ? isArchived
+                ? "Unarchiving..."
+                : "Archiving..."
+              : isArchived
+              ? "Unarchive Chat"
+              : "Archive Chat"}
+          </ThemedText>
+        </ScaleInPressable>
+      </ThemedView>
+    </ThemedView>
+  );
+}
+
+function ChatArchived({
+  id,
+  onUpdate,
+}: {
+  id: number;
+  onUpdate?: () => Promise<void>;
+}) {
+  const [isArchiving, setIsArchiving] = useState(false);
+  const handleArchiveToggle = async () => {
+    setIsArchiving(true);
+    try {
+      await apiPost(`/conversations/${id}/status`, {
+        archived: false,
+      });
+      await onUpdate?.();
+    } catch (error) {
+      console.error("Failed to toggle archive:", error);
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
+  return (
+    <>
+      <ThemedView>
+        <ThemedText style={{ textAlign: "center" }}>
+          This conversation is archived
+        </ThemedText>
+        <ScaleInPressable
+          onPress={handleArchiveToggle}
+          disabled={isArchiving}
+          style={{
+            // backgroundColor: isArchived ? "#10B981" : "#6B7280",
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderRadius: 6,
+            alignSelf: "center",
+            opacity: isArchiving ? 0.5 : 1,
+          }}
+        >
+          <ThemedText
+            style={{
+              color: "black",
+              fontSize: 14,
+              fontWeight: "600",
+              textAlign: "center",
+            }}
+          >
+            {isArchiving ? "Unarchiving..." : "Unarchive Chat"}
+          </ThemedText>
+        </ScaleInPressable>
+      </ThemedView>
+    </>
+  );
+}
+
+function AcceptRejectChatRequestPanel({
+  conversationId,
+  onAccept,
+  onReject,
+  senderUsername,
+}: {
+  conversationId: number;
+  onAccept?: () => void;
+  onReject?: () => void;
+  senderUsername?: string;
+}) {
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  const handleAccept = async () => {
+    setIsAccepting(true);
+    try {
+      await apiPost(`/conversations/${conversationId}/status`, {
+        blocked: false,
+      });
+      onAccept?.();
+    } catch (error) {
+      console.error("Failed to accept chat request:", error);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    setIsRejecting(true);
+    try {
+      await apiPost(`/conversations/${conversationId}/status`, {
+        blocked: true,
+      });
+      onReject?.();
+    } catch (error) {
+      console.error("Failed to reject chat request:", error);
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  return (
+    <ThemedView
+      style={{
+        padding: 16,
+        borderTopWidth: 1,
+        borderTopColor: "#E5E7EB",
+        backgroundColor: "#F9FAFB",
+      }}
+    >
+      <ThemedView
+        style={{
+          backgroundColor: "#F9FAFB",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <ThemedText
+          style={{
+            fontSize: 16,
+            fontWeight: "600",
+            marginBottom: 4,
+            textAlign: "center",
+          }}
+        >
+          Chat Request
+        </ThemedText>
+        <ThemedText
+          type="caption"
+          style={{
+            textAlign: "center",
+          }}
+        >
+          {senderUsername
+            ? `${senderUsername} wants to chat with you`
+            : "You have a new chat request"}
+        </ThemedText>
+      </ThemedView>
+
+      <ThemedView
+        style={{
+          flexDirection: "row",
+          gap: 12,
+          backgroundColor: "#F9FAFB",
+        }}
+      >
+        <ScaleInPressable
+          onPress={handleReject}
+          disabled={isRejecting || isAccepting}
+          style={{
+            flex: 1,
+            backgroundColor: "#EF4444",
+            borderRadius: 8,
+            paddingVertical: 12,
+            opacity: isRejecting || isAccepting ? 0.5 : 1,
+          }}
+        >
+          <ThemedText
+            style={{
+              color: "white",
+              textAlign: "center",
+              fontSize: 16,
+              fontWeight: "600",
+            }}
+          >
+            {isRejecting ? "Rejecting..." : "Reject"}
+          </ThemedText>
+        </ScaleInPressable>
+
+        <ScaleInPressable
+          onPress={handleAccept}
+          disabled={isAccepting || isRejecting}
+          style={{
+            flex: 1,
+            backgroundColor: "#10B981",
+            borderRadius: 8,
+            paddingVertical: 12,
+            opacity: isAccepting || isRejecting ? 0.5 : 1,
+          }}
+        >
+          <ThemedText
+            style={{
+              color: "white",
+              textAlign: "center",
+              fontSize: 16,
+              fontWeight: "600",
+            }}
+          >
+            {isAccepting ? "Accepting..." : "Accept"}
+          </ThemedText>
+        </ScaleInPressable>
+      </ThemedView>
+    </ThemedView>
   );
 }

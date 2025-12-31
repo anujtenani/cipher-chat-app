@@ -1,3 +1,4 @@
+import ScaleInPressable from "@/components/ScaleInPressable";
 import SettingsListItem from "@/components/settings/SettingsListItem";
 import SettingsSectionTitle from "@/components/settings/SettingsSectionTitle";
 import { ThemedView } from "@/components/themed-view";
@@ -50,7 +51,10 @@ export default function Settings() {
         />
 
         <SettingsSectionTitle title="Help & About"></SettingsSectionTitle>
-        <SettingsListItem title="Contact Us" onPress={contactEmail} />
+        <SettingsListItem
+          title="Contact Us / Give Feedback"
+          onPress={contactEmail}
+        />
 
         <SettingsListItem
           title="Terms of Service"
@@ -96,9 +100,11 @@ function ProfileVisibility() {
 
 function DeleteAccountButton() {
   return (
-    <View style={{ padding: 10, alignItems: "center", marginTop: 20 }}>
+    <ScaleInPressable
+      style={{ padding: 10, alignItems: "center", marginTop: 20 }}
+    >
       <ThemedText style={{ color: "red" }}>Delete Account</ThemedText>
-    </View>
+    </ScaleInPressable>
   );
 }
 function LogoutButton() {
@@ -137,7 +143,9 @@ function ProfileCard() {
         ></Avatar>
         <View>
           <ThemedText type="subtitle">{user?.username || ""}</ThemedText>
-          <ThemedText type="caption">{user?.bio || "no bio set"}</ThemedText>
+          <ThemedText type="caption">
+            {user?.bio || "Click here to set your profile"}
+          </ThemedText>
         </View>
       </View>
     </Pressable>

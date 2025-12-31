@@ -27,7 +27,7 @@ export default function ProfileSettings() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
-        aspect: [16, 9],
+        aspect: [1, 1],
         quality: 0.7,
       });
       if (!result.canceled) {
@@ -100,7 +100,8 @@ export default function ProfileSettings() {
           DATE OF BIRTH
         </ThemedText>
         <ThemedDatePicker
-          value={new Date(user?.date_of_birth || "")}
+          value={user?.date_of_birth ? new Date(user.date_of_birth) : undefined}
+          placeholder="Select date"
           onChange={(d) => updateProfile({ date_of_birth: d.toString() })}
         />
       </View>

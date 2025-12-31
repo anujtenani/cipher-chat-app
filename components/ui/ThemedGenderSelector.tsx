@@ -25,7 +25,7 @@ export default function ThemedGenderSelector({
     { value: "m", label: "MALE", icon: "♂" },
     { value: "f", label: "FEMALE", icon: "♀" },
     // { value: "non-binary", label: "Non-binary", icon: "⚧" },
-    { value: "na", label: "prefer not to say", icon: "?" },
+    // { value: "na", label: "prefer not to say", icon: "?" },
   ];
 
   return (
@@ -50,6 +50,7 @@ export default function ThemedGenderSelector({
                 // gap: 4,
                 // alignItems: "center",
                 borderRadius: 8,
+                borderWidth: 1,
                 backgroundColor: isSelected ? primaryColor : cardColor,
                 borderColor: isSelected ? primaryColor : borderColor,
               },
