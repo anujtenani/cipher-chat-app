@@ -7,13 +7,13 @@ import { apiGet, apiPost } from "@/utils/api";
 import { MediaAsset, PublicUser } from "@/utils/api_types";
 import { calculateAge, formatDistance } from "@/utils/func";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  Image,
   Linking,
   ScrollView,
   TouchableOpacity,
@@ -308,9 +308,13 @@ function RenderGalleryStrip({
             }}
           >
             <Image
-              source={{ uri: item.thumbnail }}
+              source={item.thumbnail}
+              placeholder={{
+                blurhash: item.blurhash,
+              }}
               style={{ width: "100%", height: "100%" }}
-              resizeMode="cover"
+              contentFit="cover"
+              contentPosition={"center"}
             />
             {item.type === "video" && (
               <View

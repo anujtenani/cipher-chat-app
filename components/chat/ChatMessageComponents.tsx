@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
 
-function formatDuration(seconds?: number): string {
+function formatDuration(milliSeconds?: number): string {
+  const seconds = milliSeconds ? milliSeconds / 1000 : undefined;
   if (!seconds) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
@@ -23,7 +24,7 @@ function RenderAttachment({
   totalAttachments: number;
 }) {
   const isVideo = attachment.type === "video";
-  console.log({ attachment });
+  console.log({ canShowMedia, thumb: attachment.thumbnail });
   return (
     <View
       style={{
@@ -33,10 +34,10 @@ function RenderAttachment({
     >
       <Image
         key={String(index)}
-        source={{
-          uri: attachment.thumbnail,
+        placeholder={{
           blurhash: attachment.blurhash,
         }}
+        source={attachment.thumbnail}
         style={{
           width: 240,
           height: 240,

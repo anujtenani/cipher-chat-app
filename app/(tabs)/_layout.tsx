@@ -8,10 +8,14 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useTyping } from "@/hooks/useTyping";
 import { apiPost, getUserInfo, socket } from "@/utils/api";
+import { Platform } from "react-native";
 
 function updateLocation() {
   return getUserInfo().then((user) => {
-    return apiPost("/auth/update-location", user);
+    return apiPost("/auth/update-location", {
+      ...user,
+      os: Platform.OS,
+    });
   });
 }
 export default function TabLayout() {

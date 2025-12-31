@@ -158,6 +158,7 @@ function RenderVideoItem({ item }: { item: MediaAsset & { type: "video" } }) {
       <VideoView
         player={player}
         allowsFullscreen
+        startsPictureInPictureAutomatically
         allowsPictureInPicture
         style={{
           width: "100%",

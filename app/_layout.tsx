@@ -6,13 +6,12 @@ import {
 import "react-native-reanimated";
 
 import PinLockOverlay from "@/components/lockscreen/PinLockOverlay";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { apiGet } from "@/utils/api";
 import { useNetworkState } from "expo-network";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { AppState } from "react-native";
+import { AppState, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SWRConfig } from "swr";
 
@@ -23,6 +22,8 @@ import { SWRConfig } from "swr";
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const networkState = useNetworkState();
+  // const { isAvailable, isMandatory, updateInfo, openUpdateURL, dismissUpdate } =
+  //   useUpdateChecker();
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -76,6 +77,13 @@ export default function RootLayout() {
         </SWRConfig>
         <StatusBar style="auto" />
         <PinLockOverlay></PinLockOverlay>
+        {/* <UpdateModal
+          visible={isAvailable}
+          versionName={updateInfo?.versionName || ""}
+          isMandatory={isMandatory}
+          onUpdate={openUpdateURL}
+          onDismiss={dismissUpdate}
+        /> */}
       </GestureHandlerRootView>
     </ThemeProvider>
   );

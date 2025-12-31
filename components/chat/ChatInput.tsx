@@ -142,11 +142,9 @@ function UploadingList({ conversationId }: { conversationId: number }) {
           >
             <Image
               contentFit="cover"
-              source={{
-                uri: file.metadata.thumbnail,
+              source={file.metadata.thumbnail}
+              placeholder={{
                 blurhash: file.metadata.blurhash,
-                width: file.width,
-                height: file.height,
               }}
               style={{
                 width: 56,

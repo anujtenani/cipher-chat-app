@@ -179,12 +179,15 @@ export default function ChatPanel() {
           conversationId={Number(id)}
         ></AcceptRejectChatRequestPanel>
       ) : null}
-      <OtherUserLeftChatBanner
-        otherUser={otherUser}
-        conversation={conversation?.conversation}
-        onUpdate={mutateConversation}
-      />
-      {conversation?.conversation?.muted_at !== null ? (
+      {otherUser && otherUser?.left_at !== null ? (
+        <OtherUserLeftChatBanner
+          otherUser={otherUser}
+          conversation={conversation?.conversation}
+          onUpdate={mutateConversation}
+        />
+      ) : null}
+      {conversation?.conversation &&
+      conversation?.conversation?.muted_at !== null ? (
         <ChatArchived
           id={Number(id)}
           onUpdate={async () => {
@@ -323,7 +326,6 @@ function OtherUserLeftChatBanner({
 }) {
   const [isArchiving, setIsArchiving] = useState(false);
   const router = useRouter();
-  if (otherUser?.left_at === null) return null;
 
   const isArchived = conversation?.muted_at !== null;
 
@@ -343,7 +345,6 @@ function OtherUserLeftChatBanner({
       setIsArchiving(false);
     }
   };
-
   return (
     <ThemedView
       style={{

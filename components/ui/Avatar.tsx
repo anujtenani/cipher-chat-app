@@ -1,6 +1,6 @@
+import { Image } from "expo-image";
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
-
+import { StyleSheet, Text, View } from "react-native";
 interface AvatarProps {
   uri?: string;
   name: string;
@@ -38,7 +38,8 @@ export default function Avatar({
     <View style={[styles.container, { width: size, height: size }]}>
       {uri ? (
         <Image
-          source={{ uri }}
+          // placeholder={}
+          source={uri}
           style={[styles.image, { width: size, height: size }]}
         />
       ) : (
