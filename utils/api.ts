@@ -2,8 +2,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
 
 const baseURL =
-  //`https://cipher-chat-api.hideitpro.com`;
-  `http://192.168.68.52:3010`;
+  process.env.NODE_ENV === "development"
+    ? `http://192.168.68.52:3010`
+    : `https://cipher-chat-api.hideitpro.com`;
 let accessToken: string | null = null;
 export const getAcessToken = async () => {
   if (accessToken) return accessToken;
