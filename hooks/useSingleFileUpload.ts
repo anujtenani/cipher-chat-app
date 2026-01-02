@@ -7,47 +7,52 @@ export default function useSingleFileUpload(
 ) {
   const [uploadProgress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const trigger = useCallback(
-    () => async () => {
-      // Request permissions
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const trigger = useCallback(async () => {
+    // Request permissions
+    // console.log("requesting permissions");
+    // if (Platform.OS === "android") {
+    //   const cameraPermission =
+    //     await ImagePicker.requestCameraPermissionsAsync();
+    //   if (cameraPermission.granted === false) {
+    //     alert(`Failed to get permission. Please allow access to your photos.`);
+    //     return;
+    //   }
+    // }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    // console.log({ status });
+    if (status !== "granted") {
+      alert(`Failed to get permission. Please allow access to your photos.`);
+      return;
+    }
 
-      if (status !== "granted") {
-        alert(`Failed to get permission. Please allow access to your photos.`);
-        return;
-      }
-
-      try {
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ["images"],
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.7,
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (!result.canceled) {
+        const selectedAsset = result.assets[0];
+        setIsUploading(true);
+        const uploadResult = await uploadImageFile(
+          selectedAsset,
+          (progress) => {
+            setProgress(progress);
+          }
+        );
+        setIsUploading(false);
+        onUploadCallback({
+          ...uploadResult,
+          thumbnail: `${uploadResult.url}?height=300`,
+          width: selectedAsset.width,
+          height: selectedAsset.height,
         });
-        if (!result.canceled) {
-          const selectedAsset = result.assets[0];
-          setIsUploading(true);
-          const uploadResult = await uploadImageFile(
-            selectedAsset,
-            (progress) => {
-              setProgress(progress);
-            }
-          );
-          setIsUploading(false);
-          onUploadCallback({
-            ...uploadResult,
-            thumbnail: `${uploadResult.url}?height=300`,
-            width: selectedAsset.width,
-            height: selectedAsset.height,
-          });
-        }
-      } catch (error) {
-        console.error("Error picking image:", error);
       }
-    },
-    [onUploadCallback]
-  );
+    } catch (error) {
+      console.error("Error picking image:", error);
+    }
+  }, [onUploadCallback]);
 
   return {
     trigger,
