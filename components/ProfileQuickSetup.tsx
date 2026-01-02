@@ -168,6 +168,7 @@ function PillButton({
   onPress: () => void;
 }) {
   const borderColor = useThemeColor({}, "border");
+  const primaryColor = useThemeColor({}, "primary");
   return (
     <ScaleInPressable
       onPress={onPress}
@@ -178,7 +179,7 @@ function PillButton({
         borderRadius: 6,
         marginTop: 12,
         minWidth: 100,
-        backgroundColor: isSelected ? "#3b82f6" : "white",
+        backgroundColor: isSelected ? primaryColor : "white",
         alignItems: "center",
       }}
     >

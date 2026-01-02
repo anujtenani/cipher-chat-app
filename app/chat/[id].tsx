@@ -5,6 +5,7 @@ import ScaleInPressable from "@/components/ScaleInPressable";
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/Avatar";
 import { ThemedText } from "@/components/ui/ThemedText";
+import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuth } from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
 import useToggle from "@/hooks/useToggle";
@@ -134,7 +135,14 @@ export default function ChatPanel() {
         }}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
-          isLoading ? null : () => <ListEmptyComponent otherUser={otherUser} />
+          isLoading
+            ? null
+            : () => (
+                <ListEmptyComponent
+                  conversationId={Number(id)}
+                  otherUser={otherUser}
+                />
+              )
         }
         renderItem={({ item }) => (
           <ScaleInPressable
@@ -195,7 +203,6 @@ export default function ChatPanel() {
           }}
         ></ChatArchived>
       ) : null}
-
       <ChatInput conversationId={Number(id)} />
       <BottomModal visible={bottomSheet} onClose={toggleBottomSheet}>
         <ThemedView
@@ -233,7 +240,13 @@ export default function ChatPanel() {
   );
 }
 
-function ListEmptyComponent({ otherUser }: { otherUser?: PublicUser }) {
+function ListEmptyComponent({
+  conversationId,
+  otherUser,
+}: {
+  conversationId: number;
+  otherUser?: PublicUser;
+}) {
   return (
     <View
       style={{
@@ -282,6 +295,10 @@ function ListEmptyComponent({ otherUser }: { otherUser?: PublicUser }) {
           ? `This is the beginning of your conversation with ${otherUser.username}. Send a message to get started.`
           : "No messages yet. Start the conversation by sending your first message below."}
       </Text>
+      <ConversationStarters
+        conversationId={conversationId}
+        username={otherUser?.username || ""}
+      />
     </View>
   );
 }
@@ -593,3 +610,56 @@ function AcceptRejectChatRequestPanel({
     </ThemedView>
   );
 }
+
+function ConversationStarters({
+  conversationId,
+  username,
+}: {
+  conversationId: number;
+  username: string;
+}) {
+  const borderColor = useThemeColor({}, "border");
+  const primaryColor = useThemeColor({}, "primary");
+  const self = useAuth((state) => state.user);
+  const sendMessage = useMessages((state) => state.sendMessage);
+
+  const { data, isLoading, mutate } = useSWR<{
+    starters: string[];
+  }>(username ? `/ai/conversation-starters?username=${username}` : null, {});
+  if (isLoading || !data?.starters || data?.starters?.length === 0) {
+    return null;
+  }
+  return (
+    <View style={{ width: "100%" }}>
+      <View style={{ margin: 4, borderWidth: 1, borderRadius: 8, borderColor }}>
+        {data?.starters.map((starter, index) => (
+          <ScaleInPressable
+            style={{
+              borderBottomWidth: index === data.starters.length - 1 ? 0 : 1,
+              borderBottomColor: borderColor,
+              padding: 8,
+            }}
+            key={String(starter)}
+            onPress={() => {
+              sendMessage({
+                id: 0,
+                created_at: new Date().toISOString(),
+                sender: self!,
+                conversation_id: conversationId,
+                data: {
+                  text: starter,
+                },
+              });
+            }}
+          >
+            <ThemedText style={{ fontSize: 14, color: primaryColor }}>
+              {starter}
+            </ThemedText>
+          </ScaleInPressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function ListItem() {}

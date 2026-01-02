@@ -1,17 +1,17 @@
 import ProfileQuickSetup from "@/components/ProfileQuickSetup";
 import Avatar from "@/components/ui/Avatar";
 import HeaderIconButton from "@/components/ui/HeaderIconButton";
+import ThemedButton from "@/components/ui/ThemedButton";
 import { ThemedText } from "@/components/ui/ThemedText";
 import TypingIndicator from "@/components/ui/TypingIndicator";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useTyping } from "@/hooks/useTyping";
 import { apiGet, socket } from "@/utils/api";
 import { Conversation } from "@/utils/api_types";
 import { formatTimestamp } from "@/utils/func";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Button, FlatList, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import useSWR from "swr";
 
 type FilterType = "active" | "favorites" | "archived" | "blocked";
@@ -193,8 +193,8 @@ export default function HomeScreen() {
           keyExtractor={(item) => item.id.toString()}
           style={{ flex: 1 }}
         />
+        <ProfileQuickSetup />
       </View>
-      <ProfileQuickSetup />
     </React.Fragment>
   );
 }
@@ -244,36 +244,12 @@ function ListEmptyComponent() {
       >
         Start a new chat to get started
       </ThemedText>
-      <TouchableOpacity
+      <ThemedButton
+        title="Discover People Nearby"
         onPress={() => router.push("/nearby")}
-        style={{
-          marginTop: 24,
-          backgroundColor: "#3b82f6",
-          paddingHorizontal: 24,
-          paddingVertical: 12,
-          borderRadius: 8,
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
-          Discover People Nearby
-        </Text>
-      </TouchableOpacity>
+      ></ThemedButton>
     </View>
   );
-}
-
-function ShowPushNotificationPrompt() {
-  const { hasPermission, register } = usePushNotifications();
-
-  if (!hasPermission) {
-    return (
-      <View style={{ padding: 16, alignItems: "center" }}>
-        <ThemedText>Enable push notifications to stay updated!</ThemedText>
-        <Button title="Enable Notifications" onPress={register} />
-      </View>
-    );
-  }
-  return null;
 }
 
 function FilterPill({
@@ -285,6 +261,7 @@ function FilterPill({
   isSelected: boolean;
   onPress: () => void;
 }) {
+  const backgroundColor = useThemeColor({}, "primary");
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -292,7 +269,7 @@ function FilterPill({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: isSelected ? "#3B82F6" : "#F3F4F6",
+        backgroundColor: isSelected ? backgroundColor : "#F3F4F6",
         borderWidth: isSelected ? 0 : 1,
         borderColor: "#E5E7EB",
       }}

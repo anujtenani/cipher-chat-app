@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/use-theme-color";
 import { ActivityIndicator, Text, View } from "react-native";
 import ScaleInPressable from "../ScaleInPressable";
 
@@ -16,6 +17,7 @@ export default function ThemedButton({
   onPress?: () => void;
   title?: string;
 }) {
+  const primaryColor = useThemeColor({}, "primary");
   return (
     <ScaleInPressable
       onPress={onPress}
@@ -23,7 +25,7 @@ export default function ThemedButton({
       style={[
         {
           opacity: isLoading ? 0.5 : 1,
-          backgroundColor: isLoading ? "#007AFF" : "#007AFF",
+          backgroundColor: primaryColor,
           borderRadius: 8,
         },
         style,

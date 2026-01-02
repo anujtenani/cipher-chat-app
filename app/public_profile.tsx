@@ -17,6 +17,7 @@ import {
   Dimensions,
   Linking,
   ScrollView,
+  Text,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -209,19 +210,21 @@ export default function PublicProfilePage() {
               }}
             >
               <Ionicons name="person-outline" size={20} color={primaryColor} />
-              <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
                 {age ? (
                   <ThemedText type="defaultSemiBold">
                     {age} years old
                   </ThemedText>
                 ) : null}
-                <ThemedText
-                  type="caption"
-                  lightColor={mutedColor}
-                  darkColor={mutedColor}
-                >
-                  {user.gender?.toUpperCase()} {user.country}
-                </ThemedText>
+                <RenderGender gender={user.gender} />
+                <RenderCountryFlag countryCode={user.country} />/{" "}
               </View>
             </View>
           </View>
@@ -271,6 +274,28 @@ export default function PublicProfilePage() {
         </ThemedText>
       </ThemedButton>
     </ThemedView>
+  );
+}
+function RenderGender({ gender }: { gender?: string }) {
+  if (!gender) {
+    return null;
+  }
+  const color = gender === "m" ? "#0984e3" : "#e84393";
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        backgroundColor: color,
+      }}
+    >
+      <Text style={{ color: "white" }}>
+        {gender === "m" ? "Male" : "Female"}
+      </Text>
+    </View>
   );
 }
 
