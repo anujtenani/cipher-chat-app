@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 const baseURL =
   process.env.NODE_ENV === "development"
-    ? `http://192.168.68.52:3010`
+    ? `http://192.168.68.55:3010`
     : `https://cipher-chat-api.hideitpro.com`;
 let accessToken: string | null = null;
 export const getAcessToken = async () => {

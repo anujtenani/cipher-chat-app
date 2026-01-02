@@ -1,3 +1,4 @@
+import RenderCountryFlag from "@/components/RenderCountryFlag";
 import Avatar from "@/components/ui/Avatar";
 import ThemedButton from "@/components/ui/ThemedButton";
 import ThemedInput from "@/components/ui/ThemedInput";
@@ -107,7 +108,7 @@ function RenderUserItem({ user }: { user: PublicUser }) {
             {formatDistance(item.distance_km)}
           </Text>
         </View>
-        {item.location ? (
+        {item.location || item.country ? (
           <View
             style={{
               flexDirection: "row",
@@ -118,9 +119,11 @@ function RenderUserItem({ user }: { user: PublicUser }) {
           >
             <Ionicons name="location-outline" size={14} color={colors.icon} />
             <Text style={{ color: colors.icon, flex: 1 }} numberOfLines={1}>
-              {item.location}
-              {item.country ? `, ${item.country}` : ""}
+              {item.location || item.country}
+
+              {/* {item.country ? `, ${item.country}` : ""} */}
             </Text>
+            <RenderCountryFlag countryCode={item.country} />
           </View>
         ) : null}
 

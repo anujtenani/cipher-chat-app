@@ -1,3 +1,4 @@
+import RenderCountryFlag from "@/components/RenderCountryFlag";
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/Avatar";
 import ThemedButton from "@/components/ui/ThemedButton";
@@ -180,11 +181,7 @@ export default function PublicProfilePage() {
                 borderColor,
               }}
             >
-              <Ionicons
-                name="location-outline"
-                size={20}
-                color={primaryColor}
-              />
+              <RenderCountryFlag countryCode={user.country} />
               <View style={{ flex: 1 }}>
                 <ThemedText type="defaultSemiBold">
                   {user.location || user.country}
@@ -223,7 +220,7 @@ export default function PublicProfilePage() {
                   lightColor={mutedColor}
                   darkColor={mutedColor}
                 >
-                  {user.gender?.toUpperCase()} • {user.country}
+                  {user.gender?.toUpperCase()} {user.country}
                 </ThemedText>
               </View>
             </View>

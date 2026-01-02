@@ -4,53 +4,25 @@ import ThemedGenderSelector from "@/components/ui/ThemedGenderSelector";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuth } from "@/hooks/useAuth";
-import { uploadImageFile } from "@/utils/upload_functions";
-import * as ImagePicker from "expo-image-picker";
+import useSingleFileUpload from "@/hooks/useSingleFileUpload";
 import { Stack, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, View } from "react-native";
+
 export default function ProfileSettings() {
   const user = useAuth((state) => state.user);
   const updateProfile = useAuth((state) => state.updateProfile);
-  const [progress, setProgress] = React.useState(0);
   const router = useRouter();
-  const pickImage = async () => {
-    // Request permissions
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (status !== "granted") {
-      alert(`Failed to get permission. Please allow access to your photos.`);
-      return;
-    }
-
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.7,
-      });
-      if (!result.canceled) {
-        const selectedAsset = result.assets[0];
-        const uploadResult = await uploadImageFile(
-          selectedAsset,
-          (progress) => {
-            setProgress(progress);
-          }
-        );
-        updateProfile({
-          profile_photo: {
-            ...uploadResult,
-            thumbnail: `${uploadResult.url}?height=300`,
-            width: selectedAsset.width,
-            height: selectedAsset.height,
-          },
-        });
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-    }
-  };
+  const {
+    trigger,
+    // isUploading,
+    // uploadProgress: progress,
+  } = useSingleFileUpload((data) => {
+    updateProfile({
+      profile_photo: data,
+    });
+  });
+  const pickImage = trigger;
 
   const backgroundColor = useThemeColor({}, "background");
   return (

@@ -1,3 +1,4 @@
+import ProfileQuickSetup from "@/components/ProfileQuickSetup";
 import Avatar from "@/components/ui/Avatar";
 import HeaderIconButton from "@/components/ui/HeaderIconButton";
 import { ThemedText } from "@/components/ui/ThemedText";
@@ -193,6 +194,7 @@ export default function HomeScreen() {
           style={{ flex: 1 }}
         />
       </View>
+      <ProfileQuickSetup />
     </React.Fragment>
   );
 }
@@ -283,8 +285,6 @@ function FilterPill({
   isSelected: boolean;
   onPress: () => void;
 }) {
-  const textColor = useThemeColor({}, "text");
-
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -301,7 +301,7 @@ function FilterPill({
         style={{
           fontSize: 14,
           fontWeight: isSelected ? "600" : "500",
-          color: isSelected ? "white" : textColor,
+          color: isSelected ? "white" : "#222",
         }}
       >
         {label}
