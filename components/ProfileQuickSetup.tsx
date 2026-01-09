@@ -1,5 +1,6 @@
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuth } from "@/hooks/useAuth";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import useSingleFileUpload from "@/hooks/useSingleFileUpload";
 import React from "react";
 import { Text, View } from "react-native";
@@ -12,35 +13,97 @@ export default function ProfileQuickSetup() {
   const surface = useThemeColor({}, "surface");
   const profile_photo = useAuth((state) => state.user?.profile_photo);
   const age = useAuth((state) => state.user?.date_of_birth);
+  const userAge = new Date().getFullYear() - new Date(age || "").getFullYear();
+
   const gender = useAuth((state) => state.user?.gender);
   if (profile_photo && age && gender) return null;
   return (
-    <View
-      style={{
-        margin: 12,
-        backgroundColor: surface,
-        padding: 12,
-        borderWidth: 1,
-        borderColor: borderColor,
-        borderRadius: 8,
-      }}
-    >
-      <ThemedText
+    <View>
+      <View
         style={{
-          textAlign: "center",
-          fontSize: 16,
-          fontWeight: "600",
-          marginBottom: 8,
+          marginHorizontal: 12,
+          backgroundColor: surface,
+          padding: 12,
+          borderWidth: 1,
+          borderColor: borderColor,
+          borderRadius: 18,
         }}
       >
-        Complete your profile for better matches!
-      </ThemedText>
+        <ThemedText
+          style={{
+            textAlign: "center",
+            fontSize: 16,
+            fontWeight: "600",
+            marginBottom: 8,
+          }}
+        >
+          Complete your profile for better matches!
+        </ThemedText>
 
-      {!gender ? <AreYouMaleOrFemale></AreYouMaleOrFemale> : null}
-      {!profile_photo ? <UploadProfilePhoto></UploadProfilePhoto> : null}
-      {!age ? <YourAge></YourAge> : null}
+        {!gender ? <AreYouMaleOrFemale></AreYouMaleOrFemale> : null}
+        {!profile_photo ? <UploadProfilePhoto></UploadProfilePhoto> : null}
+        {userAge <= 12 ? <YourAge></YourAge> : null}
+      </View>
+
+      <EnablePushNotifications></EnablePushNotifications>
+      <View style={{ height: 12 }}></View>
     </View>
   );
+}
+
+function EnablePushNotifications() {
+  const { hasPermission, register } = usePushNotifications();
+  const borderColor = useThemeColor({}, "border");
+  const surface = useThemeColor({}, "surface");
+  if (!hasPermission) {
+    return (
+      <View
+        style={{
+          marginHorizontal: 12,
+          marginTop: 12,
+          backgroundColor: surface,
+          padding: 12,
+          borderWidth: 1,
+          borderColor: borderColor,
+          borderRadius: 18,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 8,
+          }}
+        >
+          <View>
+            <ThemedText
+              style={{
+                fontSize: 16,
+                fontWeight: "500",
+              }}
+            >
+              Never miss a message!
+            </ThemedText>
+            <ThemedText
+              style={{
+                marginTop: 4,
+                fontSize: 14,
+              }}
+            >
+              Enable Push Notifications
+            </ThemedText>
+          </View>
+
+          <PillButton
+            onPress={register}
+            isSelected={false}
+            text="Enable"
+          ></PillButton>
+        </View>
+      </View>
+    );
+  }
 }
 
 function OptionTitle({ title }: { title: string }) {
@@ -51,6 +114,7 @@ function OptionTitle({ title }: { title: string }) {
           textAlign: "center",
           marginTop: 12,
           fontSize: 14,
+          marginBottom: 8,
           fontWeight: "500",
         }}
       >
@@ -66,9 +130,7 @@ function YourAge() {
     new Date().getFullYear() - new Date(date_of_birth || "").getFullYear();
 
   const updateProfile = useAuth((state) => state.updateProfile);
-  if (userAge > 12) {
-    return null;
-  }
+
   const handleAge = (age: number) => () => {
     updateProfile({
       date_of_birth: `${new Date().getFullYear() - Number(age)}-06-01`,
@@ -108,10 +170,6 @@ function UploadProfilePhoto() {
     });
   });
   const updateProfile = useAuth((state) => state.updateProfile);
-  const profile_photo = useAuth((state) => state.user?.profile_photo);
-  if (profile_photo) {
-    return null;
-  }
 
   return (
     <View>
@@ -126,11 +184,8 @@ function UploadProfilePhoto() {
 }
 
 function AreYouMaleOrFemale() {
-  const gender = useAuth((state) => state.user?.gender);
   const updateProfile = useAuth((state) => state.updateProfile);
-  if (gender) {
-    return null;
-  }
+
   return (
     <View>
       <OptionTitle title="Select your gender" />
@@ -177,7 +232,6 @@ function PillButton({
         borderWidth: 1,
         borderColor: borderColor,
         borderRadius: 6,
-        marginTop: 12,
         minWidth: 100,
         backgroundColor: isSelected ? primaryColor : "white",
         alignItems: "center",

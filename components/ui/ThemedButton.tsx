@@ -35,6 +35,7 @@ export default function ThemedButton({
         style={{
           flexDirection: "row",
           height: 56,
+          paddingHorizontal: 12,
           alignItems: "center",
           justifyContent: "center",
           gap: 8,
