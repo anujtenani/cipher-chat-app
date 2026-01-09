@@ -5,7 +5,7 @@ import ThemedButton from "@/components/ui/ThemedButton";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuth } from "@/hooks/useAuth";
-import { apiGet } from "@/utils/api";
+import { apiGet, apiPost } from "@/utils/api";
 import { MediaAsset, PublicUser } from "@/utils/api_types";
 import { calculateAge, formatDistance } from "@/utils/func";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,9 +31,9 @@ const MEDIA_GRID_SIZE = (width - 48) / 3; // 3 columns with padding
 export default function PublicProfilePage() {
   const { username } = useLocalSearchParams();
   const router = useRouter();
-  const { date_of_birth, profile_photo, gender } = useAuth(
-    (state) => state.user || {}
-  );
+  const date_of_birth = useAuth((state) => state.user?.date_of_birth);
+  const profile_photo = useAuth((state) => state.user?.profile_photo);
+  const gender = useAuth((state) => state.user?.gender);
   const { data, isLoading } = useSWR<{ user: PublicUser }>(
     `/users/user/${username}`,
     apiGet
@@ -52,10 +52,36 @@ export default function PublicProfilePage() {
     if (!user) return;
 
     // Check if current user has completed their profile
-    if (true || !profile_photo || !date_of_birth || !gender) {
+    if (!profile_photo || !date_of_birth || !gender) {
       router.push("/profile_wizard/need_profile_completion");
       return;
     }
+
+    // Navigate to chat screen with user
+    setStarting(true);
+    apiPost<{
+      conversation: { id: number };
+      error: string;
+      code: string;
+    }>("/conversations/start", {
+      username: user.username,
+    }).then(({ conversation, error }) => {
+      if (conversation?.id) {
+        setStarting(false);
+        router.push(`/chat/${conversation.id}`);
+      } else if (error) {
+        Alert.alert("Could not start chat", error, [
+          {
+            text: "OK",
+            onPress: () => {
+              router.push("/settings/profile");
+            },
+          },
+        ]);
+      } else {
+        Alert.alert("Could not start chat. Please try again later.");
+      }
+    });
   };
 
   const handleReport = async () => {

@@ -16,10 +16,9 @@ export default function NeedProfileCompletionPage() {
   const primaryColor = useThemeColor({}, "primary");
   const cardColor = useThemeColor({}, "card");
   const borderColor = useThemeColor({}, "border");
-
-  const { profile_photo, date_of_birth, gender } = useAuth(
-    (state) => state.user || {}
-  );
+  const date_of_birth = useAuth((state) => state.user?.date_of_birth);
+  const profile_photo = useAuth((state) => state.user?.profile_photo);
+  const gender = useAuth((state) => state.user?.gender);
 
   const isProfileComplete = profile_photo && date_of_birth && gender;
 

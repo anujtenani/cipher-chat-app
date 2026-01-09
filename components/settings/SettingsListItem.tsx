@@ -1,5 +1,6 @@
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import ScaleInPressable from "../ScaleInPressable";
 import { ThemedText } from "../ui/ThemedText";
 
 interface SettingsListItemProps {
@@ -18,7 +19,7 @@ export default function SettingsListItem({
   disabled,
 }: SettingsListItemProps) {
   const borderColor = useThemeColor({}, "border");
-  const Cmp = onPress ? Pressable : View;
+  const Cmp = onPress ? ScaleInPressable : View;
   return (
     <Cmp
       onPress={onPress}
