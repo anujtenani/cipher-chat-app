@@ -8,9 +8,9 @@ import { ThemedText } from "@/components/ui/ThemedText";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuth } from "@/hooks/useAuth";
 import { Stack, useRouter } from "expo-router";
+import * as StoreReview from "expo-store-review";
 import React from "react";
 import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
-import * as StoreReview from "expo-store-review";
 
 export default function Settings() {
   const router = useRouter();
@@ -31,16 +31,19 @@ export default function Settings() {
       Alert.alert("Error", "Could not open email client");
     }
   };
-  
+
   const handleRateApp = async () => {
     const isAvailable = await StoreReview.isAvailableAsync();
     if (isAvailable) {
       await StoreReview.requestReview();
     } else {
-      Alert.alert("Not Available", "Store review is not available on this device");
+      Alert.alert(
+        "Not Available",
+        "Store review is not available on this device"
+      );
     }
   };
-  
+
   const bgColor = useThemeColor({}, "background");
   return (
     <ScrollView style={{ flex: 1, backgroundColor: bgColor }}>
