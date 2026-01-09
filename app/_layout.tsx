@@ -11,10 +11,10 @@ import { useNetworkState } from "expo-network";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { AppState, useColorScheme } from "react-native";
+import { AppState, LogBox, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SWRConfig } from "swr";
-
+LogBox.uninstall();
 // export const unstable_settings = {
 //   anchor: "(tabs)",
 // };

@@ -245,6 +245,7 @@ function ListEmptyComponent() {
         Start a new chat to get started
       </ThemedText>
       <ThemedButton
+        style={{ width: 200, marginTop: 24 }}
         title="Discover People Nearby"
         onPress={() => router.push("/nearby")}
       ></ThemedButton>

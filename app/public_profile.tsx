@@ -224,7 +224,7 @@ export default function PublicProfilePage() {
                   </ThemedText>
                 ) : null}
                 <RenderGender gender={user.gender} />
-                <RenderCountryFlag countryCode={user.country} />/{" "}
+                <RenderCountryFlag countryCode={user.country} />
               </View>
             </View>
           </View>
