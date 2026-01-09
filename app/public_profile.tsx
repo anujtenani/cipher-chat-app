@@ -4,7 +4,8 @@ import Avatar from "@/components/ui/Avatar";
 import ThemedButton from "@/components/ui/ThemedButton";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { apiGet, apiPost } from "@/utils/api";
+import { useAuth } from "@/hooks/useAuth";
+import { apiGet } from "@/utils/api";
 import { MediaAsset, PublicUser } from "@/utils/api_types";
 import { calculateAge, formatDistance } from "@/utils/func";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,6 +31,9 @@ const MEDIA_GRID_SIZE = (width - 48) / 3; // 3 columns with padding
 export default function PublicProfilePage() {
   const { username } = useLocalSearchParams();
   const router = useRouter();
+  const { date_of_birth, profile_photo, gender } = useAuth(
+    (state) => state.user || {}
+  );
   const { data, isLoading } = useSWR<{ user: PublicUser }>(
     `/users/user/${username}`,
     apiGet
@@ -46,18 +50,12 @@ export default function PublicProfilePage() {
   const insets = useSafeAreaInsets();
   const handleStartChat = () => {
     if (!user) return;
-    // Navigate to chat screen with user
-    setStarting(true);
-    apiPost<{ conversation: { id: number } }>("/conversations/start", {
-      username: user.username,
-    }).then(({ conversation }) => {
-      if (conversation.id) {
-        setStarting(false);
-        router.push(`/chat/${conversation.id}`);
-      } else {
-        alert("Could not start chat. Please try again later.");
-      }
-    });
+
+    // Check if current user has completed their profile
+    if (true || !profile_photo || !date_of_birth || !gender) {
+      router.push("/profile_wizard/need_profile_completion");
+      return;
+    }
   };
 
   const handleReport = async () => {
@@ -74,7 +72,6 @@ export default function PublicProfilePage() {
     } else {
       Alert.alert("Error", "Could not open email client");
     }
-
     // Handle report user
   };
   const age = calculateAge(user?.date_of_birth);

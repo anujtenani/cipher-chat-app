@@ -1,11 +1,13 @@
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuth } from "@/hooks/useAuth";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 import useSingleFileUpload from "@/hooks/useSingleFileUpload";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import { EnablePushNotifications } from "./home/EnablePushNotifications";
 import ScaleInPressable from "./ScaleInPressable";
+import ThemedButton from "./ui/ThemedButton";
 import { ThemedText } from "./ui/ThemedText";
 
 export default function ProfileQuickSetup() {
@@ -19,6 +21,17 @@ export default function ProfileQuickSetup() {
   if (profile_photo && age && gender) return null;
   return (
     <View>
+      <ThemedText
+        style={{
+          textAlign: "center",
+          fontSize: 16,
+          fontWeight: "600",
+          marginBottom: 8,
+        }}
+      >
+        Complete your profile for better matches!
+      </ThemedText>
+
       <View
         style={{
           marginHorizontal: 12,
@@ -27,19 +40,14 @@ export default function ProfileQuickSetup() {
           borderWidth: 1,
           borderColor: borderColor,
           borderRadius: 18,
+          gap: 12,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
         }}
       >
-        <ThemedText
-          style={{
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "600",
-            marginBottom: 8,
-          }}
-        >
-          Complete your profile for better matches!
-        </ThemedText>
-
         {!gender ? <AreYouMaleOrFemale></AreYouMaleOrFemale> : null}
         {!profile_photo ? <UploadProfilePhoto></UploadProfilePhoto> : null}
         {userAge <= 12 ? <YourAge></YourAge> : null}
@@ -50,79 +58,6 @@ export default function ProfileQuickSetup() {
     </View>
   );
 }
-
-function EnablePushNotifications() {
-  const { hasPermission, register } = usePushNotifications();
-  const borderColor = useThemeColor({}, "border");
-  const surface = useThemeColor({}, "surface");
-  if (!hasPermission) {
-    return (
-      <View
-        style={{
-          marginHorizontal: 12,
-          marginTop: 12,
-          backgroundColor: surface,
-          padding: 12,
-          borderWidth: 1,
-          borderColor: borderColor,
-          borderRadius: 18,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingHorizontal: 8,
-          }}
-        >
-          <View>
-            <ThemedText
-              style={{
-                fontSize: 16,
-                fontWeight: "500",
-              }}
-            >
-              Never miss a message!
-            </ThemedText>
-            <ThemedText
-              style={{
-                marginTop: 4,
-                fontSize: 14,
-              }}
-            >
-              Enable Push Notifications
-            </ThemedText>
-          </View>
-
-          <PillButton
-            onPress={register}
-            isSelected={false}
-            text="Enable"
-          ></PillButton>
-        </View>
-      </View>
-    );
-  }
-}
-
-function OptionTitle({ title }: { title: string }) {
-  return (
-    <>
-      <ThemedText
-        style={{
-          textAlign: "center",
-          marginTop: 12,
-          fontSize: 14,
-          marginBottom: 8,
-          fontWeight: "500",
-        }}
-      >
-        {title}
-      </ThemedText>
-    </>
-  );
-}
 const ageRange = Array.from({ length: 83 }, (_, i) => i + 18);
 function YourAge() {
   const date_of_birth = useAuth((state) => state.user?.date_of_birth);
@@ -130,6 +65,7 @@ function YourAge() {
     new Date().getFullYear() - new Date(date_of_birth || "").getFullYear();
 
   const updateProfile = useAuth((state) => state.updateProfile);
+  const iconColor = useThemeColor({}, "text");
 
   const handleAge = (age: number) => () => {
     updateProfile({
@@ -138,11 +74,29 @@ function YourAge() {
   };
   return (
     <View>
-      <OptionTitle title="How old are you?" />
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+          paddingHorizontal: 8,
+          marginBottom: 12,
+        }}
+      >
+        <Ionicons name="calendar-outline" size={20} color={iconColor} />
+        <ThemedText
+          style={{
+            fontSize: 16,
+            fontWeight: "500",
+          }}
+        >
+          Your Age
+        </ThemedText>
+      </View>
       <ScrollView
         horizontal
-        contentContainerStyle={{ gap: 8 }}
-        showsHorizontalScrollIndicator={true}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 8 }}
+        showsHorizontalScrollIndicator={false}
       >
         {ageRange.map((age) => {
           return (
@@ -170,26 +124,67 @@ function UploadProfilePhoto() {
     });
   });
   const updateProfile = useAuth((state) => state.updateProfile);
+  const iconColor = useThemeColor({}, "text");
 
   return (
-    <View>
-      <OptionTitle title="Set your profile picture" />
-      <PillButton
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 8,
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Ionicons name="camera-outline" size={20} color={iconColor} />
+        <View>
+          <ThemedText
+            style={{
+              fontSize: 16,
+              fontWeight: "500",
+            }}
+          >
+            Profile Picture
+          </ThemedText>
+        </View>
+      </View>
+      <ThemedButton
+        style={{ paddingVertical: 12, paddingHorizontal: 2 }}
+        title="Choose"
         onPress={trigger}
-        isSelected={false}
-        text="Click here to select"
-      ></PillButton>
+        icon="camera-outline"
+      ></ThemedButton>
     </View>
   );
 }
 
 function AreYouMaleOrFemale() {
   const updateProfile = useAuth((state) => state.updateProfile);
+  const iconColor = useThemeColor({}, "text");
 
   return (
-    <View>
-      <OptionTitle title="Select your gender" />
-      <View style={{ alignSelf: "center", flexDirection: "row", gap: 12 }}>
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 8,
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Ionicons name="person-outline" size={20} color={iconColor} />
+        <View>
+          <ThemedText
+            style={{
+              fontSize: 16,
+              fontWeight: "500",
+            }}
+          >
+            Gender
+          </ThemedText>
+        </View>
+      </View>
+      <View style={{ flexDirection: "row", gap: 8 }}>
         <PillButton
           text="Male"
           isSelected={false}
