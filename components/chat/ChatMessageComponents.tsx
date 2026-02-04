@@ -3,6 +3,7 @@ import { formatTimestamp } from "@/utils/func";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Text, View } from "react-native";
+import TurnBasedStoryComponent from "./TurnBasedStoryComponent";
 
 function formatDuration(milliSeconds?: number): string {
   const seconds = milliSeconds ? milliSeconds / 1000 : undefined;
@@ -247,8 +248,12 @@ export function MessageBubble({
 }) {
   const side = isCurrentUser ? "right" : "left";
   const hasAttachments =
-    message.data.attachments && message.data.attachments.length > 0;
-  const hasText = message.data.text && message.data.text.trim().length > 0;
+    message.type == 2 &&
+    message.data.attachments &&
+    message.data.attachments.length > 0;
+  const hasText =
+    // message.type == 1 &&
+    message.data?.text && message.data?.text.trim().length > 0;
 
   return (
     <View>
@@ -267,6 +272,10 @@ export function MessageBubble({
           timestamp={message.created_at}
         />
       )}
+      {message.type == 3 ? (
+        <TurnBasedStoryComponent data={message.data}></TurnBasedStoryComponent>
+      ) : null}
+      {/* <ThemedText>{JSON.stringify(message.data, null, 2)}</ThemedText> */}
     </View>
   );
 }

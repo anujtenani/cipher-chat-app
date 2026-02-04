@@ -1,4 +1,3 @@
-import BottomModal from "@/components/BottomModal";
 import ChatInput from "@/components/chat/ChatInput";
 import { MessageBubble } from "@/components/chat/ChatMessageComponents";
 import ScaleInPressable from "@/components/ScaleInPressable";
@@ -13,8 +12,9 @@ import { useTyping } from "@/hooks/useTyping";
 import { apiGet, apiPost, socket } from "@/utils/api";
 import { Conversation, PublicUser } from "@/utils/api_types";
 import { formatDistance } from "@/utils/func";
+import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import useSWR from "swr";
 export default function ChatPanel() {
@@ -46,6 +46,7 @@ export default function ChatPanel() {
   const { data: conversation, mutate: mutateConversation } = useSWR<{
     conversation: Conversation;
   }>(`/conversations/${id}`, apiGet);
+  console.log("Conversation data:", msgs);
   useEffect(() => {
     const listener = ({
       conversationId,
@@ -150,11 +151,13 @@ export default function ChatPanel() {
               toggleBottomSheet();
             }}
             onPress={
-              item.data?.attachments && item.data.attachments.length > 0
+              item.type === 2 &&
+              item.data?.attachments &&
+              item.data.attachments.length > 0
                 ? () => {
                     // setGalleryVisible(true);
                     router.push(
-                      `/gallery?source=conversation&username=${otherUser?.username}&start_id=${item.id}`
+                      `/gallery?source=conversation&username=${otherUser?.username}&start_id=${item.id}`,
                     );
                     console.log("item pressed");
                   }
@@ -203,8 +206,20 @@ export default function ChatPanel() {
           }}
         ></ChatArchived>
       ) : null}
+      {/* <AttachmentOptions
+        onSelect={() => {
+          apiPost("/games/turn-based/create", {
+            conversationId: Number(id),
+            themeId: "vampire_city",
+          }).catch((e) => {
+            console.log(e);
+          });
+          console.log("selected");
+        }}
+      ></AttachmentOptions> */}
       <ChatInput conversationId={Number(id)} />
-      <BottomModal visible={bottomSheet} onClose={toggleBottomSheet}>
+
+      {/* <BottomModal visible={bottomSheet} onClose={toggleBottomSheet}>
         <ThemedView
           style={{
             padding: 16,
@@ -235,7 +250,7 @@ export default function ChatPanel() {
             Cancel
           </ThemedText>
         </ThemedView>
-      </BottomModal>
+      </BottomModal> */}
     </ThemedView>
   );
 }
@@ -268,13 +283,18 @@ function ListEmptyComponent({
           marginBottom: 20,
         }}
       >
-        <Text style={{ fontSize: 40 }}>💬</Text>
+        <Text style={{ fontSize: 40 }}>
+          <Ionicons
+            name="chatbubble-ellipses-outline"
+            size={40}
+            color="#3b82f6"
+          />
+        </Text>
       </View>
-      <Text
+      <ThemedText
         style={{
           fontSize: 22,
           fontWeight: "700",
-          color: "#111827",
           marginBottom: 8,
           textAlign: "center",
         }}
@@ -282,11 +302,11 @@ function ListEmptyComponent({
         {otherUser
           ? `Say hello to ${otherUser.username}!`
           : "Start a conversation"}
-      </Text>
-      <Text
+      </ThemedText>
+      <ThemedText
         style={{
+          opacity: 0.7,
           fontSize: 15,
-          color: "#6b7280",
           textAlign: "center",
           lineHeight: 22,
         }}
@@ -294,7 +314,7 @@ function ListEmptyComponent({
         {otherUser
           ? `This is the beginning of your conversation with ${otherUser.username}. Send a message to get started.`
           : "No messages yet. Start the conversation by sending your first message below."}
-      </Text>
+      </ThemedText>
       <ConversationStarters
         conversationId={conversationId}
         username={otherUser?.username || ""}
@@ -312,22 +332,21 @@ function HeaderTitle({
 }) {
   const typing = useTyping((state) => state.typingUsers);
   const isTyping = typing.has(Number(conversationId));
-  const self = useAuth((state) => state.user);
   const distance = participant?.distance_km || 0;
   return (
     <>
-      <ThemedView
-        style={{ alignItems: "center", gap: 8, flexDirection: "row" }}
-      >
-        <ThemedText>
-          {participant?.username || ""} ({formatDistance(distance)})
-        </ThemedText>
+      <View style={{ alignItems: "center", gap: 8, flexDirection: "row" }}>
+        <ThemedText>{participant?.username || ""}</ThemedText>
         {isTyping ? (
           <ThemedText type="caption" style={{ fontStyle: "italic" }}>
             Typing...
           </ThemedText>
-        ) : null}
-      </ThemedView>
+        ) : (
+          <ThemedText style={{ opacity: 0.7, fontSize: 14 }}>
+            &nbsp;{formatDistance(distance)}
+          </ThemedText>
+        )}
+      </View>
     </>
   );
 }
@@ -409,8 +428,8 @@ function OtherUserLeftChatBanner({
                 ? "Unarchiving..."
                 : "Archiving..."
               : isArchived
-              ? "Unarchive Chat"
-              : "Archive Chat"}
+                ? "Unarchive Chat"
+                : "Archive Chat"}
           </ThemedText>
         </ScaleInPressable>
       </ThemedView>
@@ -515,19 +534,20 @@ function AcceptRejectChatRequestPanel({
       setIsRejecting(false);
     }
   };
+  const border = useThemeColor({}, "border");
 
   return (
     <ThemedView
       style={{
         padding: 16,
-        borderTopWidth: 1,
-        borderTopColor: "#E5E7EB",
-        backgroundColor: "#F9FAFB",
+        margin: 16,
+        elevation: 2,
+        borderColor: border,
+        borderRadius: 16,
       }}
     >
       <ThemedView
         style={{
-          backgroundColor: "#F9FAFB",
           alignItems: "center",
           marginBottom: 16,
         }}
@@ -558,7 +578,6 @@ function AcceptRejectChatRequestPanel({
         style={{
           flexDirection: "row",
           gap: 12,
-          backgroundColor: "#F9FAFB",
         }}
       >
         <ScaleInPressable
@@ -643,6 +662,7 @@ function ConversationStarters({
             onPress={() => {
               sendMessage({
                 id: 0,
+                type: 1,
                 created_at: new Date().toISOString(),
                 sender: self!,
                 conversation_id: conversationId,
@@ -661,5 +681,3 @@ function ConversationStarters({
     </View>
   );
 }
-
-function ListItem() {}

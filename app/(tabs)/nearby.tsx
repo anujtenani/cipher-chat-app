@@ -1,4 +1,5 @@
 import RenderCountryFlag from "@/components/RenderCountryFlag";
+import ReviewPrompt from "@/components/ReviewPrompt";
 import Avatar from "@/components/ui/Avatar";
 import ThemedButton from "@/components/ui/ThemedButton";
 import ThemedInput from "@/components/ui/ThemedInput";
@@ -26,7 +27,7 @@ export default function NearbyUsers() {
     `/users/nearby?limit=100&offset=0${
       search ? `&search=${encodeURIComponent(search)}` : ""
     }`,
-    apiGet
+    apiGet,
   );
 
   const router = useRouter();
@@ -48,6 +49,7 @@ export default function NearbyUsers() {
   return (
     <React.Fragment>
       <View style={{ flex: 1 }}>
+        <ReviewPrompt delayMs={5000} />
         <View style={{ padding: 16, paddingBottom: 8 }}>
           <ThemedInput
             placeholder="Search nearby users..."

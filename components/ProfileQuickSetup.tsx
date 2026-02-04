@@ -50,7 +50,7 @@ export default function ProfileQuickSetup() {
       >
         {!gender ? <AreYouMaleOrFemale></AreYouMaleOrFemale> : null}
         {!profile_photo ? <UploadProfilePhoto></UploadProfilePhoto> : null}
-        {userAge <= 12 ? <YourAge></YourAge> : null}
+        {!userAge || userAge <= 12 ? <YourAge></YourAge> : null}
       </View>
 
       <EnablePushNotifications></EnablePushNotifications>

@@ -2,9 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
 
 const baseURL =
-  process.env.NODE_ENV === "development"
-    ? `http://192.168.68.53:3010`
-    : `https://cipher-chat-api.hideitpro.com`;
+  // process.env.NODE_ENV === "development"
+  // ? `http://192.168.68.53:3010`
+  // :
+  `https://cipher-chat-api.hideitpro.com`;
 let accessToken: string | null = null;
 export const getAcessToken = async () => {
   if (accessToken) return accessToken;
@@ -35,6 +36,7 @@ export async function apiPost<T>(url: string, body?: any): Promise<T> {
     body: body ? JSON.stringify(body) : undefined,
   })
     .then((res) => res.json())
+
     .then((data) => {
       console.log("apiPost", { url, body, data });
       return data;
@@ -53,7 +55,7 @@ export async function apiGet<T>(url: string): Promise<T> {
     .then((res) =>
       res.headers.get("content-type")?.includes("application/json")
         ? res.json()
-        : res.text()
+        : res.text(),
     )
     .then((data) => {
       console.log("apiGet", { url, data });

@@ -56,21 +56,57 @@ export interface Conversation {
   joined_at: string | null;
 }
 
-export interface Message {
+type BaseMessage = TurnBasedGameState | TextMessge | AttachmentMessage;
+
+export type Message = BaseMessage & {
   id: number;
   temp_id?: string;
   conversation_id: number;
+  // type: 1 | 2 | 3; // 1 = text, 2 = attachment, 3 = turn based game
   sender: PublicUser;
+  // data: MessageItem;
+  created_at: string;
+};
+
+export interface TurnBasedGameState {
+  type: 3;
   data: {
-    text?: string;
-    attachments?: {
-      url?: string;
-      id: string;
-      blurhash?: string;
-      thumbnail?: string;
-      type: "image" | "video";
-      duration?: number;
+    title: string;
+    theme: string;
+    lewdness: number;
+    players: {
+      username: string;
+      gender?: string;
+      age: number;
+      id: number;
+      accepted_at: number;
+    }[];
+    currentTurn: number;
+    history: {
+      sender: number;
+      content: string;
+      sent_at: number; //timestamp
+    }[];
+    // storySoFar: string;
+    options: { option: string; storySentence: string }[];
+  };
+}
+
+export interface TextMessge {
+  type: 1;
+  data: {
+    text: string;
+  };
+}
+export interface AttachmentMessage {
+  type: 2;
+  data: {
+    attachments: {
+      url: string;
+      type: "image" | "video" | "audio" | "file";
+      filename?: string;
     }[];
   };
-  created_at: string;
 }
+
+export type MessageItem = TurnBasedGameState | TextMessge | AttachmentMessage;
